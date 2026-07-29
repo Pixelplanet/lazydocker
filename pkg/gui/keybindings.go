@@ -263,6 +263,20 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Description: gui.Tr.OpenInBrowser,
 		},
 		{
+			ViewName:    "containers",
+			Key:         'R',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleContainersActionsMenu,
+			Description: gui.Tr.ContainerActions,
+		},
+		{
+			ViewName:    "containers",
+			Key:         'y',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleContainersCopyMenu,
+			Description: gui.Tr.CopyToClipboard,
+		},
+		{
 			ViewName:    "services",
 			Key:         'u',
 			Modifier:    gocui.ModNone,
@@ -389,6 +403,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Description: gui.Tr.ViewBulkCommands,
 		},
 		{
+			ViewName:    "images",
+			Key:         'p',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleImagePull,
+			Description: gui.Tr.PullImage,
+		},
+		{
 			ViewName:    "volumes",
 			Key:         'c',
 			Modifier:    gocui.ModNone,
@@ -436,6 +457,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleExitMain,
 			Description: gui.Tr.Return,
+		},
+		{
+			ViewName:    "main",
+			Key:         'y',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleMainCopy,
+			Description: gui.Tr.CopyToClipboard,
 		},
 		{
 			ViewName: "main",

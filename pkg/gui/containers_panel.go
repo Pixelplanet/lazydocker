@@ -520,6 +520,10 @@ func (gui *Gui) handleRemoveContainers() error {
 func (gui *Gui) handleContainersBulkCommand(g *gocui.Gui, v *gocui.View) error {
 	baseBulkCommands := []config.CustomCommand{
 		{
+			Name:             gui.Tr.UpdateAllContainers,
+			InternalFunction: gui.handleUpdateAllContainers,
+		},
+		{
 			Name:             gui.Tr.StopAllContainers,
 			InternalFunction: gui.handleStopContainers,
 		},

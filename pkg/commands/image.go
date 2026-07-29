@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"io"
 	"strings"
 
 	"github.com/docker/docker/api/types/filters"
@@ -32,6 +33,24 @@ func (i *Image) Remove(options image.RemoveOptions) error {
 	}
 
 	return nil
+}
+
+// Pull pulls the latest version of the image from its registry.
+func (i *Image) Pull(ctx context.Context) error {
+	ref := i.Name
+	if i.Tag != "" {
+		ref = i.Name + ":" + i.Tag
+	}
+
+	reader, err := i.Client.ImagePull(ctx, ref, image.PullOptions{})
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	// We must drain the reader for the pull to complete.
+	_, err = io.Copy(io.Discard, reader)
+	return err
 }
 
 func getHistoryResponseItemDisplayStrings(layer image.HistoryResponseItem) []string {

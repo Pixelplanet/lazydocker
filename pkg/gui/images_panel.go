@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -204,6 +205,25 @@ func (gui *Gui) handleImagesCustomCommand(g *gocui.Gui, v *gocui.View) error {
 	customCommands := gui.Config.UserConfig.CustomCommands.Images
 
 	return gui.createCustomCommandMenu(customCommands, commandObject)
+}
+
+func (gui *Gui) handleImagePull(g *gocui.Gui, v *gocui.View) error {
+	img, err := gui.Panels.Images.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	if img.Name == "" || img.Name == "none" {
+		gui.flashStatus(gui.Tr.NothingToDisplay)
+		return nil
+	}
+
+	return gui.WithWaitingStatus(gui.Tr.PullingStatus, func() error {
+		if err := img.Pull(context.Background()); err != nil {
+			return gui.createErrorPanel(err.Error())
+		}
+		return gui.reloadImages()
+	})
 }
 
 func (gui *Gui) handleImagesBulkCommand(g *gocui.Gui, v *gocui.View) error {

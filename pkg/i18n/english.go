@@ -110,6 +110,51 @@ type TranslationSet struct {
 	OpenInBrowser               string
 	SortContainersByState       string
 
+	// Feature additions: copy, recreate/update, rename, restart policy, env editing
+	ContainerActions            string
+	ContainerActionsTitle       string
+	CopyMenuTitle               string
+	CopyToClipboard             string
+	CopyContainerID             string
+	CopyContainerName           string
+	CopyContainerImage          string
+	CopyEnvVariables            string
+	CopyEnvValue                string
+	CopyEnvKeyValue             string
+	ExportEnvToFile             string
+	Copied                      string
+	NothingToCopy               string
+	UpdateAndRecreate           string
+	RecreateKeepImage           string
+	EditEnvAndRecreate          string
+	Rename                      string
+	RenameContainerPrompt       string
+	StartContainer              string
+	ChangeRestartPolicy         string
+	RestartPolicyMenuTitle      string
+	RestartPolicyNo             string
+	RestartPolicyOnFailure      string
+	RestartPolicyAlways         string
+	RestartPolicyUnlessStopped  string
+	PullImage                   string
+	PullingStatus               string
+	RecreatingStatus            string
+	RenamingStatus              string
+	UpdatingRestartPolicyStatus string
+	ConfirmRecreate             string
+	ConfirmUpdateAndRecreate    string
+	UpdateAllContainers         string
+	ConfirmUpdateAllContainers  string
+	UpdatingAllContainersStatus string
+	EditEnvMenuTitle            string
+	AddEnvVariable              string
+	ApplyAndRecreatePull        string
+	ApplyAndRecreate            string
+	EditEnvVarPrompt            string
+	AddEnvVarPrompt             string
+	CopyEnvVariableTitle        string
+	ExportedEnvTo               string
+	CannotEditComposeEnv        string
 	LogsTitle                   string
 	ConfigTitle                 string
 	EnvTitle                    string
@@ -218,6 +263,50 @@ func englishSet() TranslationSet {
 		OpenInBrowser:               "open in browser (first port is http)",
 		SortContainersByState:       "sort containers by state",
 
+		ContainerActions:            "container actions (recreate/update/rename/...)",
+		ContainerActionsTitle:       "Container Actions",
+		CopyMenuTitle:               "Copy to clipboard",
+		CopyToClipboard:             "copy to clipboard",
+		CopyContainerID:             "copy container ID",
+		CopyContainerName:           "copy container name",
+		CopyContainerImage:          "copy image",
+		CopyEnvVariables:            "copy an environment variable",
+		CopyEnvValue:                "copy value",
+		CopyEnvKeyValue:             "copy KEY=VALUE",
+		ExportEnvToFile:             "export all env vars to a .env file",
+		Copied:                      "Copied to clipboard",
+		NothingToCopy:               "Nothing to copy",
+		UpdateAndRecreate:           "update to latest image and recreate",
+		RecreateKeepImage:           "recreate (keep current image)",
+		EditEnvAndRecreate:          "edit environment variables and recreate",
+		Rename:                      "rename container",
+		RenameContainerPrompt:       "New container name:",
+		StartContainer:              "start container",
+		ChangeRestartPolicy:         "change restart policy",
+		RestartPolicyMenuTitle:      "Restart policy",
+		RestartPolicyNo:             "no (do not automatically restart)",
+		RestartPolicyOnFailure:      "on-failure (restart on non-zero exit)",
+		RestartPolicyAlways:         "always (restart regardless of exit status)",
+		RestartPolicyUnlessStopped:  "unless-stopped (restart unless manually stopped)",
+		PullImage:                   "pull latest image",
+		PullingStatus:               "pulling image",
+		RecreatingStatus:            "recreating container",
+		RenamingStatus:              "renaming container",
+		UpdatingRestartPolicyStatus: "updating restart policy",
+		ConfirmRecreate:             "Are you sure you want to recreate this container? The current container will be removed and a new one created with the same configuration.",
+		ConfirmUpdateAndRecreate:    "Are you sure you want to pull the latest image and recreate this container? The current container will be removed and a new one created with the same configuration.",
+		UpdateAllContainers:         "update all containers to latest image",
+		ConfirmUpdateAllContainers:  "Are you sure you want to pull the latest image and recreate every standalone container? Each container will be removed and recreated with the same configuration.",
+		UpdatingAllContainersStatus: "updating all containers",
+		EditEnvMenuTitle:            "Edit environment variables",
+		AddEnvVariable:              "+ add new variable",
+		ApplyAndRecreatePull:        "apply, pull latest image and recreate",
+		ApplyAndRecreate:            "apply and recreate (keep current image)",
+		EditEnvVarPrompt:            "Edit value for",
+		AddEnvVarPrompt:             "New variable (KEY=VALUE):",
+		CopyEnvVariableTitle:        "Copy environment variable",
+		ExportedEnvTo:               "Exported env to",
+		CannotEditComposeEnv:        "Editing env vars is only supported for standalone containers. This container is managed by docker compose; edit your compose file instead.",
 		GlobalTitle:                 "Global",
 		MainTitle:                   "Main",
 		ProjectTitle:                "Project",

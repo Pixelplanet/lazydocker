@@ -37,6 +37,16 @@ func (m *statusManager) addWaitingStatus(name string) {
 	m.statuses = append([]appStatus{newStatus}, m.statuses...)
 }
 
+func (m *statusManager) addFlashStatus(name string) {
+	m.removeStatus(name)
+	newStatus := appStatus{
+		name:       name,
+		statusType: "flash",
+		duration:   0,
+	}
+	m.statuses = append([]appStatus{newStatus}, m.statuses...)
+}
+
 func (m *statusManager) getStatusString() string {
 	if len(m.statuses) == 0 {
 		return ""
@@ -79,4 +89,18 @@ func (gui *Gui) WithWaitingStatus(name string, f func() error) error {
 	}()
 
 	return nil
+}
+
+// flashStatus briefly shows a transient message in the status area (for
+// example, after copying something to the clipboard) and then clears it.
+func (gui *Gui) flashStatus(message string) {
+	go func() {
+		gui.statusManager.addFlashStatus(message)
+		_ = gui.renderString(gui.g, "appStatus", message)
+
+		time.Sleep(2 * time.Second)
+
+		gui.statusManager.removeStatus(message)
+		_ = gui.renderString(gui.g, "appStatus", gui.statusManager.getStatusString())
+	}()
 }
