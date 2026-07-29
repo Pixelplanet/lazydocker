@@ -5,8 +5,6 @@ import (
 
 	"github.com/imdario/mergo"
 
-	"github.com/cloudfoundry/jibber_jabber"
-	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,18 +15,10 @@ type Localizer struct {
 }
 
 func NewTranslationSetFromConfig(log *logrus.Entry, configLanguage string) (*TranslationSet, error) {
-	if configLanguage == "auto" {
-		language := detectLanguage(jibber_jabber.DetectLanguage)
-		return NewTranslationSet(log, language), nil
-	}
-
-	for key := range GetTranslationSets() {
-		if key == configLanguage {
-			return NewTranslationSet(log, configLanguage), nil
-		}
-	}
-
-	return NewTranslationSet(log, "en"), errors.New("Language not found: " + configLanguage)
+	// This fork intentionally ships English only. We ignore the configured
+	// language (and system locale auto-detection) so the UI never renders a
+	// mix of languages when new strings have not been translated yet.
+	return NewTranslationSet(log, "en"), nil
 }
 
 func NewTranslationSet(log *logrus.Entry, language string) *TranslationSet {
@@ -58,13 +48,4 @@ func GetTranslationSets() map[string]TranslationSet {
 		"es": spanishSet(),
 		"pt": portugueseSet(),
 	}
-}
-
-// detectLanguage extracts user language from environment
-func detectLanguage(langDetector func() (string, error)) string {
-	if userLang, err := langDetector(); err == nil {
-		return userLang
-	}
-
-	return "C"
 }

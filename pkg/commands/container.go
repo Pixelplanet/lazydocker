@@ -105,6 +105,43 @@ func (c *Container) EnvVars() []string {
 	return c.Details.Config.Env
 }
 
+// ComposeInfo describes how a container was created by docker compose. It is
+// derived from the labels docker compose sets on the containers it manages.
+type ComposeInfo struct {
+	Project     string
+	Service     string
+	WorkingDir  string
+	ConfigFiles []string
+}
+
+// IsComposeManaged reports whether the container is managed by docker compose.
+func (c *Container) IsComposeManaged() bool {
+	_, ok := c.Container.Labels["com.docker.compose.project"]
+	return ok
+}
+
+// ComposeInfo extracts the docker compose metadata from the container's labels.
+// The second return value is false if the container is not compose-managed.
+func (c *Container) ComposeInfo() (ComposeInfo, bool) {
+	labels := c.Container.Labels
+	project, ok := labels["com.docker.compose.project"]
+	if !ok {
+		return ComposeInfo{}, false
+	}
+
+	info := ComposeInfo{
+		Project:    project,
+		Service:    labels["com.docker.compose.service"],
+		WorkingDir: labels["com.docker.compose.project.working_dir"],
+	}
+
+	if files := labels["com.docker.compose.project.config_files"]; files != "" {
+		info.ConfigFiles = strings.Split(files, ",")
+	}
+
+	return info, true
+}
+
 // UpdateRestartPolicy updates the restart policy of the container in place
 // (without recreating it).
 func (c *Container) UpdateRestartPolicy(policy container.RestartPolicyMode) error {

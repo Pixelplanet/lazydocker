@@ -155,6 +155,7 @@ type TranslationSet struct {
 	CopyEnvVariableTitle        string
 	ExportedEnvTo               string
 	CannotEditComposeEnv        string
+	ConfirmationHint            string
 	LogsTitle                   string
 	ConfigTitle                 string
 	EnvTitle                    string
@@ -307,6 +308,7 @@ func englishSet() TranslationSet {
 		CopyEnvVariableTitle:        "Copy environment variable",
 		ExportedEnvTo:               "Exported env to",
 		CannotEditComposeEnv:        "Editing env vars is only supported for standalone containers. This container is managed by docker compose; edit your compose file instead.",
+		ConfirmationHint:            "(press y to confirm, n or esc to cancel)",
 		GlobalTitle:                 "Global",
 		MainTitle:                   "Main",
 		ProjectTitle:                "Project",

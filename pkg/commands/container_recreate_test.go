@@ -116,3 +116,53 @@ func TestBuildNetworkingConfigNoNetworks(t *testing.T) {
 		t.Errorf("expected empty endpoints config, got %v", cfg.EndpointsConfig)
 	}
 }
+
+func TestComposeInfo(t *testing.T) {
+	ctr := &Container{
+		Container: container.Summary{
+			Labels: map[string]string{
+				"com.docker.compose.project":              "cloudify-3d",
+				"com.docker.compose.service":              "backend",
+				"com.docker.compose.project.working_dir":  `C:\Projects\cloudify-3d`,
+				"com.docker.compose.project.config_files": `C:\Projects\cloudify-3d\docker-compose.yml,C:\Projects\cloudify-3d\docker-compose.override.yml`,
+			},
+		},
+	}
+
+	if !ctr.IsComposeManaged() {
+		t.Fatal("expected IsComposeManaged to be true")
+	}
+
+	info, ok := ctr.ComposeInfo()
+	if !ok {
+		t.Fatal("expected ComposeInfo to return ok")
+	}
+	if info.Project != "cloudify-3d" {
+		t.Errorf("Project = %q, want cloudify-3d", info.Project)
+	}
+	if info.Service != "backend" {
+		t.Errorf("Service = %q, want backend", info.Service)
+	}
+	if info.WorkingDir != `C:\Projects\cloudify-3d` {
+		t.Errorf("WorkingDir = %q", info.WorkingDir)
+	}
+	if len(info.ConfigFiles) != 2 {
+		t.Fatalf("expected 2 config files, got %v", info.ConfigFiles)
+	}
+	if info.ConfigFiles[1] != `C:\Projects\cloudify-3d\docker-compose.override.yml` {
+		t.Errorf("second config file = %q", info.ConfigFiles[1])
+	}
+}
+
+func TestComposeInfoStandalone(t *testing.T) {
+	ctr := &Container{
+		Container: container.Summary{Labels: map[string]string{"foo": "bar"}},
+	}
+
+	if ctr.IsComposeManaged() {
+		t.Error("standalone container should not be compose managed")
+	}
+	if _, ok := ctr.ComposeInfo(); ok {
+		t.Error("ComposeInfo should return false for standalone container")
+	}
+}

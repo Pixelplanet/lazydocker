@@ -38,11 +38,23 @@ func truncateString(s string, maxLen int) string {
 // containerIsComposeManaged reports whether the container is managed by docker
 // compose (as opposed to being a standalone container).
 func containerIsComposeManaged(ctr *commands.Container) bool {
-	if ctr.Container.Labels == nil {
+	return ctr.IsComposeManaged()
+}
+
+// composeFilesAccessible reports whether the compose config files referenced by
+// the container's labels exist on this machine. When they don't (for example,
+// the container was created on a different host), we cannot drive docker
+// compose and must fall back to recreating via the Docker SDK.
+func composeFilesAccessible(info commands.ComposeInfo) bool {
+	if len(info.ConfigFiles) == 0 {
 		return false
 	}
-	_, ok := ctr.Container.Labels["com.docker.compose.project"]
-	return ok
+	for _, f := range info.ConfigFiles {
+		if _, err := os.Stat(strings.TrimSpace(f)); err != nil {
+			return false
+		}
+	}
+	return true
 }
 
 // containerImageName returns the best-known image reference for the container.
@@ -51,6 +63,12 @@ func containerImageName(ctr *commands.Container) string {
 		return ctr.Details.Config.Image
 	}
 	return ctr.Container.Image
+}
+
+// confirmPrompt appends a short hint to a confirmation prompt so the user can
+// always see how to confirm or cancel, regardless of the bottom options bar.
+func (gui *Gui) confirmPrompt(prompt string) string {
+	return prompt + "\n\n" + gui.Tr.ConfirmationHint
 }
 
 // copyToClipboard copies text to the clipboard (via OSC52) and flashes a status.
@@ -234,10 +252,16 @@ func (gui *Gui) createContainerActionsMenu(ctr *commands.Container) error {
 
 // recreateContainer recreates a container, optionally pulling the latest image
 // and/or replacing its environment. Compose-managed containers are recreated
-// through docker compose so the compose file remains the source of truth.
+// through docker compose so the compose file remains the source of truth,
+// falling back to the Docker SDK when the compose files are not accessible.
 func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []string) error {
 	if containerIsComposeManaged(ctr) {
-		return gui.recreateComposeContainer(ctr, pull)
+		info, _ := ctr.ComposeInfo()
+		if composeFilesAccessible(info) {
+			return gui.recreateComposeContainer(ctr, info, pull)
+		}
+		// Compose files aren't reachable from this machine, so fall through to
+		// the SDK recreate which works regardless of the compose file location.
 	}
 
 	prompt := gui.Tr.ConfirmRecreate
@@ -245,7 +269,7 @@ func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []s
 		prompt = gui.Tr.ConfirmUpdateAndRecreate
 	}
 
-	return gui.createConfirmationPanel(gui.Tr.Confirm, prompt, func(g *gocui.Gui, v *gocui.View) error {
+	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.RecreatingStatus, func() error {
 			if err := ctr.Recreate(context.Background(), commands.RecreateOptions{PullImage: pull, NewEnv: newEnv}); err != nil {
 				return gui.createErrorPanel(err.Error())
@@ -255,27 +279,46 @@ func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []s
 	}, nil)
 }
 
+// composeCommandPrefix builds the docker compose invocation targeting the
+// container's original project directory and config files, so it works even
+// when lazydocker was launched from a different directory.
+func (gui *Gui) composeCommandPrefix(info commands.ComposeInfo) string {
+	base := gui.Config.UserConfig.CommandTemplates.DockerCompose
+
+	var b strings.Builder
+	b.WriteString(base)
+	b.WriteString(fmt.Sprintf(" -p %s", info.Project))
+	if info.WorkingDir != "" {
+		b.WriteString(fmt.Sprintf(" --project-directory %s", gui.OSCommand.Quote(info.WorkingDir)))
+	}
+	for _, f := range info.ConfigFiles {
+		b.WriteString(fmt.Sprintf(" -f %s", gui.OSCommand.Quote(strings.TrimSpace(f))))
+	}
+
+	return b.String()
+}
+
 // recreateComposeContainer pulls (optionally) and recreates a compose-managed
-// container via docker compose.
-func (gui *Gui) recreateComposeContainer(ctr *commands.Container, pull bool) error {
-	svc := &commands.Service{Name: ctr.ServiceName, ProjectName: ctr.ProjectName}
-	composeBase := gui.DockerCommand.NewCommandObject(commands.CommandObject{Service: svc}).DockerCompose
+// container via docker compose, using the compose files referenced by the
+// container's labels.
+func (gui *Gui) recreateComposeContainer(ctr *commands.Container, info commands.ComposeInfo, pull bool) error {
+	composeBase := gui.composeCommandPrefix(info)
 
 	prompt := gui.Tr.ConfirmRecreate
 	if pull {
 		prompt = gui.Tr.ConfirmUpdateAndRecreate
 	}
 
-	return gui.createConfirmationPanel(gui.Tr.Confirm, prompt, func(g *gocui.Gui, v *gocui.View) error {
+	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.RecreatingStatus, func() error {
 			if pull {
-				pullCmd := fmt.Sprintf("%s pull %s", composeBase, ctr.ServiceName)
+				pullCmd := fmt.Sprintf("%s pull %s", composeBase, info.Service)
 				if err := gui.OSCommand.RunCommand(pullCmd); err != nil {
 					return gui.createErrorPanel(err.Error())
 				}
 			}
 
-			upCmd := fmt.Sprintf("%s up -d %s", composeBase, ctr.ServiceName)
+			upCmd := fmt.Sprintf("%s up -d --force-recreate %s", composeBase, info.Service)
 			if err := gui.OSCommand.RunCommand(upCmd); err != nil {
 				return gui.createErrorPanel(err.Error())
 			}
@@ -408,7 +451,7 @@ func (gui *Gui) applyEnvAndRecreate(ctr *commands.Container, envVars []string, p
 // --- Bulk update ---
 
 func (gui *Gui) handleUpdateAllContainers() error {
-	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.Tr.ConfirmUpdateAllContainers, func(g *gocui.Gui, v *gocui.View) error {
+	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(gui.Tr.ConfirmUpdateAllContainers), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.UpdatingAllContainersStatus, func() error {
 			for _, ctr := range gui.Panels.Containers.List.GetAllItems() {
 				if containerIsComposeManaged(ctr) {
