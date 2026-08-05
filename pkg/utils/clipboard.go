@@ -1,19 +1,32 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"os"
+	"os/exec"
 )
 
-// CopyToClipboard copies the given text to the system clipboard using the
-// OSC52 terminal escape sequence. This works across SSH sessions and does not
-// require any external clipboard binary (such as xclip or pbcopy), as long as
-// the terminal emulator supports OSC52.
+// CopyToClipboard copies the given text to the system clipboard.
+// It first attempts to use the OSC52 terminal escape sequence, which works
+// across SSH sessions without requiring external tools (as long as the terminal
+// emulator supports OSC52). If OSC52 doesn't work or the terminal doesn't support it,
+// it falls back to platform-specific clipboard tools (xclip/xsel on Linux, pbcopy on macOS).
 //
 // When running inside tmux or GNU screen the sequence is wrapped so that it is
 // passed through to the outer terminal.
 func CopyToClipboard(text string) error {
+	// First, try OSC52 (works with terminal support)
+	if err := copyViaOSC52(text); err == nil {
+		return nil
+	}
+
+	// Fall back to platform-specific tools for SSH sessions without OSC52 support
+	return copyViaClipboardTool(text)
+}
+
+func copyViaOSC52(text string) error {
 	encoded := base64.StdEncoding.EncodeToString([]byte(text))
 	sequence := buildOSC52(encoded)
 
@@ -30,6 +43,42 @@ func CopyToClipboard(text string) error {
 	}
 
 	return nil
+}
+
+// copyViaClipboardTool attempts to copy using platform-specific clipboard tools.
+// On Linux, tries xclip then xsel. On macOS, tries pbcopy.
+func copyViaClipboardTool(text string) error {
+	textBytes := []byte(text)
+
+	// Try xclip first (most common on Linux)
+	if _, err := exec.LookPath("xclip"); err == nil {
+		cmd := exec.Command("xclip", "-selection", "clipboard")
+		cmd.Stdin = bytes.NewReader(textBytes)
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+	}
+
+	// Try xsel (Debian/Ubuntu standard)
+	if _, err := exec.LookPath("xsel"); err == nil {
+		cmd := exec.Command("xsel", "--clipboard", "--input")
+		cmd.Stdin = bytes.NewReader(textBytes)
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+	}
+
+	// Try pbcopy (macOS)
+	if _, err := exec.LookPath("pbcopy"); err == nil {
+		cmd := exec.Command("pbcopy")
+		cmd.Stdin = bytes.NewReader(textBytes)
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+	}
+
+	// No clipboard tool available
+	return fmt.Errorf("clipboard: no clipboard tool available (tried xclip, xsel, pbcopy) and OSC52 is not supported by the terminal")
 }
 
 // buildOSC52 builds the OSC52 escape sequence for the given base64 payload,
