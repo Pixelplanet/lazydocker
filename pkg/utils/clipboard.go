@@ -12,7 +12,10 @@ import (
 // It first attempts to use the OSC52 terminal escape sequence, which works
 // across SSH sessions without requiring external tools (as long as the terminal
 // emulator supports OSC52). If OSC52 doesn't work or the terminal doesn't support it,
-// it falls back to platform-specific clipboard tools (xclip/xsel on Linux, pbcopy on macOS).
+// it falls back to platform-specific clipboard tools:
+// - clip.exe on Windows (including Git Bash)
+// - xclip/xsel on Linux
+// - pbcopy on macOS
 //
 // When running inside tmux or GNU screen the sequence is wrapped so that it is
 // passed through to the outer terminal.
@@ -46,9 +49,18 @@ func copyViaOSC52(text string) error {
 }
 
 // copyViaClipboardTool attempts to copy using platform-specific clipboard tools.
-// On Linux, tries xclip then xsel. On macOS, tries pbcopy.
+// On Windows, tries clip.exe. On Linux, tries xclip then xsel. On macOS, tries pbcopy.
 func copyViaClipboardTool(text string) error {
 	textBytes := []byte(text)
+
+	// Windows clipboard fallback: works from PowerShell, CMD, and Git Bash.
+	if _, err := exec.LookPath("clip.exe"); err == nil {
+		cmd := exec.Command("clip.exe")
+		cmd.Stdin = bytes.NewReader(textBytes)
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+	}
 
 	// Try xclip first (most common on Linux)
 	if _, err := exec.LookPath("xclip"); err == nil {
@@ -78,7 +90,7 @@ func copyViaClipboardTool(text string) error {
 	}
 
 	// No clipboard tool available
-	return fmt.Errorf("clipboard: no clipboard tool available (tried xclip, xsel, pbcopy) and OSC52 is not supported by the terminal")
+	return fmt.Errorf("clipboard: no clipboard tool available (tried clip.exe, xclip, xsel, pbcopy) and OSC52 is not supported by the terminal")
 }
 
 // buildOSC52 builds the OSC52 escape sequence for the given base64 payload,
