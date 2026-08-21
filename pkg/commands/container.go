@@ -189,7 +189,7 @@ func (c *Container) Recreate(ctx context.Context, opts RecreateOptions) error {
 
 	if opts.PullImage {
 		c.Log.Warn(fmt.Sprintf("pulling image %s", imageName))
-		reader, err := c.Client.ImagePull(ctx, imageName, dockerimage.PullOptions{})
+		reader, err := c.Client.ImagePull(ctx, imageName, dockerimage.PullOptions{RegistryAuth: resolveRegistryAuth(imageName)})
 		if err != nil {
 			return err
 		}

@@ -42,7 +42,7 @@ func (i *Image) Pull(ctx context.Context) error {
 		ref = i.Name + ":" + i.Tag
 	}
 
-	reader, err := i.Client.ImagePull(ctx, ref, image.PullOptions{})
+	reader, err := i.Client.ImagePull(ctx, ref, image.PullOptions{RegistryAuth: resolveRegistryAuth(ref)})
 	if err != nil {
 		return err
 	}
