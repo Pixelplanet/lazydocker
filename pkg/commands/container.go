@@ -201,6 +201,11 @@ func (c *Container) Recreate(ctx context.Context, opts RecreateOptions) error {
 	networkingConfig := buildNetworkingConfig(details, config)
 
 	name := strings.TrimPrefix(details.Name, "/")
+	if name == "" {
+		// Never recreate without an explicit name: Docker would assign a random
+		// one, breaking anything that routes to the container by name.
+		return errors.New("cannot recreate container: original name is empty")
+	}
 
 	if details.State != nil && details.State.Running {
 		c.Log.Warn(fmt.Sprintf("stopping container %s before recreation", name))

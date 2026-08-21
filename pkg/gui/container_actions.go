@@ -41,22 +41,6 @@ func containerIsComposeManaged(ctr *commands.Container) bool {
 	return ctr.IsComposeManaged()
 }
 
-// composeFilesAccessible reports whether the compose config files referenced by
-// the container's labels exist on this machine. When they don't (for example,
-// the container was created on a different host), we cannot drive docker
-// compose and must fall back to recreating via the Docker SDK.
-func composeFilesAccessible(info commands.ComposeInfo) bool {
-	if len(info.ConfigFiles) == 0 {
-		return false
-	}
-	for _, f := range info.ConfigFiles {
-		if _, err := os.Stat(strings.TrimSpace(f)); err != nil {
-			return false
-		}
-	}
-	return true
-}
-
 // containerImageName returns the best-known image reference for the container.
 func containerImageName(ctr *commands.Container) string {
 	if ctr.DetailsLoaded() && ctr.Details.Config != nil && ctr.Details.Config.Image != "" {
@@ -251,19 +235,17 @@ func (gui *Gui) createContainerActionsMenu(ctr *commands.Container) error {
 }
 
 // recreateContainer recreates a container, optionally pulling the latest image
-// and/or replacing its environment. Compose-managed containers are recreated
-// through docker compose so the compose file remains the source of truth,
-// falling back to the Docker SDK when the compose files are not accessible.
+// and/or replacing its environment.
+//
+// Recreation always goes through the Docker SDK, which recreates the container
+// with its exact current name (and full config: env, volumes, ports, networks,
+// labels, restart policy). Preserving the name matters because other services
+// — such as an nginx reverse proxy — may route traffic to the container by
+// name. Driving docker compose instead would rename the container to compose's
+// canonical "<project>-<service>-<number>" form whenever the current name
+// differs from it (for example after a manual rename, or when the container was
+// created by an older compose version that used underscores).
 func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []string) error {
-	if containerIsComposeManaged(ctr) {
-		info, _ := ctr.ComposeInfo()
-		if composeFilesAccessible(info) {
-			return gui.recreateComposeContainer(ctr, info, pull)
-		}
-		// Compose files aren't reachable from this machine, so fall through to
-		// the SDK recreate which works regardless of the compose file location.
-	}
-
 	prompt := gui.Tr.ConfirmRecreate
 	if pull {
 		prompt = gui.Tr.ConfirmUpdateAndRecreate
@@ -274,55 +256,6 @@ func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []s
 			if err := ctr.Recreate(context.Background(), commands.RecreateOptions{PullImage: pull, NewEnv: newEnv}); err != nil {
 				return gui.createErrorPanel(err.Error())
 			}
-			return gui.refreshContainersAndServices()
-		})
-	}, nil)
-}
-
-// composeCommandPrefix builds the docker compose invocation targeting the
-// container's original project directory and config files, so it works even
-// when lazydocker was launched from a different directory.
-func (gui *Gui) composeCommandPrefix(info commands.ComposeInfo) string {
-	base := gui.Config.UserConfig.CommandTemplates.DockerCompose
-
-	var b strings.Builder
-	b.WriteString(base)
-	b.WriteString(fmt.Sprintf(" -p %s", info.Project))
-	if info.WorkingDir != "" {
-		b.WriteString(fmt.Sprintf(" --project-directory %s", gui.OSCommand.Quote(info.WorkingDir)))
-	}
-	for _, f := range info.ConfigFiles {
-		b.WriteString(fmt.Sprintf(" -f %s", gui.OSCommand.Quote(strings.TrimSpace(f))))
-	}
-
-	return b.String()
-}
-
-// recreateComposeContainer pulls (optionally) and recreates a compose-managed
-// container via docker compose, using the compose files referenced by the
-// container's labels.
-func (gui *Gui) recreateComposeContainer(ctr *commands.Container, info commands.ComposeInfo, pull bool) error {
-	composeBase := gui.composeCommandPrefix(info)
-
-	prompt := gui.Tr.ConfirmRecreate
-	if pull {
-		prompt = gui.Tr.ConfirmUpdateAndRecreate
-	}
-
-	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
-		return gui.WithWaitingStatus(gui.Tr.RecreatingStatus, func() error {
-			if pull {
-				pullCmd := fmt.Sprintf("%s pull %s", composeBase, info.Service)
-				if err := gui.OSCommand.RunCommand(pullCmd); err != nil {
-					return gui.createErrorPanel(err.Error())
-				}
-			}
-
-			upCmd := fmt.Sprintf("%s up -d --force-recreate %s", composeBase, info.Service)
-			if err := gui.OSCommand.RunCommand(upCmd); err != nil {
-				return gui.createErrorPanel(err.Error())
-			}
-
 			return gui.refreshContainersAndServices()
 		})
 	}, nil)
