@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"strings"
 
 	"github.com/docker/docker/api/types/filters"
@@ -42,15 +42,10 @@ func (i *Image) Pull(ctx context.Context) error {
 		ref = i.Name + ":" + i.Tag
 	}
 
-	reader, err := i.Client.ImagePull(ctx, ref, image.PullOptions{RegistryAuth: resolveRegistryAuth(ref)})
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	// We must drain the reader for the pull to complete.
-	_, err = io.Copy(io.Discard, reader)
-	return err
+	// Pull through the docker CLI so it uses the user's configured credentials
+	// and credential helpers (docker login, az acr login, etc.). The SDK's
+	// ImagePull does not read ~/.docker/config.json.
+	return i.OSCommand.RunCommand(fmt.Sprintf("docker pull %s", i.OSCommand.Quote(ref)))
 }
 
 func getHistoryResponseItemDisplayStrings(layer image.HistoryResponseItem) []string {

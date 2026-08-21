@@ -3,13 +3,11 @@ package commands
 import (
 	"context"
 	"fmt"
-	"io"
 	"os/exec"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
-	dockerimage "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/go-errors/errors"
@@ -189,13 +187,12 @@ func (c *Container) Recreate(ctx context.Context, opts RecreateOptions) error {
 
 	if opts.PullImage {
 		c.Log.Warn(fmt.Sprintf("pulling image %s", imageName))
-		reader, err := c.Client.ImagePull(ctx, imageName, dockerimage.PullOptions{RegistryAuth: resolveRegistryAuth(imageName)})
-		if err != nil {
+		// Pull through the docker CLI so it uses the user's configured credentials
+		// and credential helpers (docker login, az acr login, etc.). The SDK's
+		// ImagePull does not read ~/.docker/config.json.
+		if err := c.OSCommand.RunCommand(fmt.Sprintf("docker pull %s", c.OSCommand.Quote(imageName))); err != nil {
 			return err
 		}
-		// We must drain the reader for the pull to complete.
-		_, _ = io.Copy(io.Discard, reader)
-		reader.Close()
 	}
 
 	networkingConfig := buildNetworkingConfig(details, config)
