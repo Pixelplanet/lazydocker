@@ -194,7 +194,7 @@ func (gui *Gui) setInitialViewContent() error {
 }
 
 func (gui *Gui) getInformationContent() string {
-	informationStr := gui.Config.Version
+	informationStr := "ver: " + gui.Config.Version
 	if !gui.g.Mouse {
 		return informationStr
 	}
