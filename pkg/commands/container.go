@@ -190,7 +190,7 @@ func (c *Container) Recreate(ctx context.Context, opts RecreateOptions) error {
 		// Pull through the docker CLI so it uses the user's configured credentials
 		// and credential helpers (docker login, az acr login, etc.). The SDK's
 		// ImagePull does not read ~/.docker/config.json.
-		if err := c.OSCommand.RunCommand(fmt.Sprintf("docker pull %s", c.OSCommand.Quote(imageName))); err != nil {
+		if err := pullImage(c.OSCommand, imageName); err != nil {
 			return err
 		}
 	}

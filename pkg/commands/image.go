@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/docker/docker/api/types/filters"
@@ -45,7 +44,7 @@ func (i *Image) Pull(ctx context.Context) error {
 	// Pull through the docker CLI so it uses the user's configured credentials
 	// and credential helpers (docker login, az acr login, etc.). The SDK's
 	// ImagePull does not read ~/.docker/config.json.
-	return i.OSCommand.RunCommand(fmt.Sprintf("docker pull %s", i.OSCommand.Quote(ref)))
+	return pullImage(i.OSCommand, ref)
 }
 
 func getHistoryResponseItemDisplayStrings(layer image.HistoryResponseItem) []string {
