@@ -142,6 +142,13 @@ type GuiConfig struct {
 	// Window border style.
 	// One of 'rounded' (default) | 'single' | 'double' | 'hidden'
 	Border string `yaml:"border"`
+
+	// RefreshInterval is the number of seconds between background refreshes of
+	// container details. Docker API calls get expensive on hosts with many
+	// containers, so raise this on busy servers. Set it to 0 to disable periodic
+	// refreshing entirely; lazydocker will still update in response to docker
+	// events.
+	RefreshInterval int `yaml:"refreshInterval,omitempty"`
 }
 
 // CommandTemplatesConfig determines what commands actually get called when we
@@ -377,6 +384,7 @@ func GetDefaultConfig() UserConfig {
 			ExpandFocusedSidePanel:     false,
 			ScreenMode:                 "normal",
 			ContainerStatusHealthStyle: "long",
+			RefreshInterval:            5,
 		},
 		ConfirmOnQuit: false,
 		Logs: LogsConfig{

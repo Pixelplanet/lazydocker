@@ -137,7 +137,7 @@ func (gui *Gui) handleVolumesRemoveMenu(g *gocui.Gui, v *gocui.View) error {
 					if err := volume.Remove(option.force); err != nil {
 						return gui.createErrorPanel(err.Error())
 					}
-					return nil
+					return gui.reloadVolumes()
 				})
 			},
 		}
@@ -156,7 +156,7 @@ func (gui *Gui) handlePruneVolumes() error {
 			if err != nil {
 				return gui.createErrorPanel(err.Error())
 			}
-			return nil
+			return gui.reloadVolumes()
 		})
 	}, nil)
 }

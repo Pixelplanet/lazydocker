@@ -298,6 +298,13 @@ func (gui *Gui) refreshContainersAndServices() error {
 		}
 	}
 
+	// `docker ps -a` gives us summaries but not the details we display (exit
+	// codes, health). Inspect only the containers actually on screen instead of
+	// every container on the host.
+	if err := gui.DockerCommand.RefreshContainerDetails(gui.containersNeedingDetails()); err != nil {
+		gui.Log.Error(err)
+	}
+
 	return gui.renderContainersAndServices()
 }
 

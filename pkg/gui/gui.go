@@ -23,6 +23,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// eventRefreshThrottle is the minimum time between refreshes triggered by
+	// docker events. The event stream is noisy (execs, healthchecks, container
+	// churn) and every refresh costs a container list plus an inspect per visible
+	// container, so refreshing on each event would hammer the daemon.
+	eventRefreshThrottle = 500 * time.Millisecond
+
+	// renderLoopInterval is how often we ask gocui to redraw the main view.
+	renderLoopInterval = 100 * time.Millisecond
+
+	// statsMonitorInterval is how often we reconcile which containers should have
+	// a stats stream attached. The reconciliation itself is cheap (no API calls
+	// unless a stream needs to be attached).
+	statsMonitorInterval = 1 * time.Second
+
+	// resourcesRefreshTTL throttles reloads of volumes, networks and images.
+	// They change far less often than containers, and each reload is another
+	// docker API call.
+	resourcesRefreshTTL = 10 * time.Second
+)
+
 // Gui wraps the gocui Gui object which handles rendering and events
 type Gui struct {
 	g             *gocui.Gui
@@ -45,6 +66,16 @@ type Gui struct {
 	Mutexes
 
 	Panels Panels
+
+	// statsMonitorMutex guards statsMonitorCancels.
+	statsMonitorMutex deadlock.Mutex
+	// statsMonitorCancels holds a cancel func per container that currently has a
+	// stats stream attached.
+	statsMonitorCancels map[string]context.CancelFunc
+
+	// resourcesRefreshMutex guards lastResourcesRefresh.
+	resourcesRefreshMutex deadlock.Mutex
+	lastResourcesRefresh  time.Time
 }
 
 type Panels struct {
@@ -211,7 +242,7 @@ func (gui *Gui) Run() error {
 		return err
 	}
 
-	throttledRefresh := throttle.ThrottleFunc(time.Millisecond*50, true, gui.refresh)
+	throttledRefresh := throttle.ThrottleFunc(eventRefreshThrottle, true, gui.refresh)
 	defer throttledRefresh.Stop()
 
 	go func() {
@@ -265,11 +296,17 @@ func (gui *Gui) Run() error {
 	go func() {
 		throttledRefresh.Trigger()
 
-		gui.goEvery(time.Millisecond*30, gui.reRenderMain)
-		gui.goEvery(time.Millisecond*1000, gui.updateContainerDetails)
-		gui.goEvery(time.Millisecond*1000, gui.checkForContextChange)
+		gui.goEvery(renderLoopInterval, gui.reRenderMain)
+		gui.goEvery(time.Second, gui.checkForContextChange)
 		// we need to regularly re-render these because their stats will be changed in the background
-		gui.goEvery(time.Millisecond*1000, gui.renderContainersAndServices)
+		gui.goEvery(time.Second, gui.renderContainersAndServices)
+
+		// Container details are re-read after every docker event, so this is only
+		// a safety net for when the event stream is unavailable. The interval is
+		// configurable so it can be stretched (or disabled) on busy hosts.
+		if interval := gui.detailsRefreshInterval(); interval > 0 {
+			gui.goEvery(interval, gui.updateContainerDetails)
+		}
 	}()
 
 	err = g.MainLoop()
@@ -291,8 +328,38 @@ func (gui *Gui) setPanels() {
 	}
 }
 
+// detailsRefreshInterval returns how often container details are re-read in the
+// background, or 0 when periodic refreshing is disabled.
+func (gui *Gui) detailsRefreshInterval() time.Duration {
+	seconds := gui.Config.UserConfig.Gui.RefreshInterval
+	if seconds <= 0 {
+		return 0
+	}
+
+	return time.Duration(seconds) * time.Second
+}
+
 func (gui *Gui) updateContainerDetails() error {
-	return gui.DockerCommand.RefreshContainerDetails(gui.Panels.Containers.List.GetAllItems())
+	if gui.Views.Containers == nil || gui.Panels.Containers == nil {
+		return nil
+	}
+
+	// Only the containers we display need details. Inspecting everything in
+	// `docker ps -a` on a timer is what used to saturate the docker API.
+	return gui.DockerCommand.RefreshContainerDetails(gui.containersNeedingDetails())
+}
+
+// containersNeedingDetails returns the containers whose details are on screen:
+// those visible in the containers panel, plus the container behind the selected
+// service (which may be hidden from that panel when project-scoped).
+func (gui *Gui) containersNeedingDetails() []*commands.Container {
+	containers := gui.Panels.Containers.List.GetItems()
+
+	if service, err := gui.Panels.Services.GetSelectedItem(); err == nil && service != nil && service.Container != nil {
+		containers = append(containers, service.Container)
+	}
+
+	return containers
 }
 
 func (gui *Gui) refresh() {
@@ -306,21 +373,30 @@ func (gui *Gui) refresh() {
 			gui.Log.Error(err)
 		}
 	}()
-	go func() {
-		if err := gui.reloadVolumes(); err != nil {
-			gui.Log.Error(err)
-		}
-	}()
-	go func() {
-		if err := gui.reloadNetworks(); err != nil {
-			gui.Log.Error(err)
-		}
-	}()
-	go func() {
-		if err := gui.reloadImages(); err != nil {
-			gui.Log.Error(err)
-		}
-	}()
+	go gui.refreshUnrelatedResources()
+}
+
+// refreshUnrelatedResources reloads volumes, networks and images. These change
+// far less often than containers, so they get their own throttle rather than
+// being reloaded on every docker event.
+func (gui *Gui) refreshUnrelatedResources() {
+	gui.resourcesRefreshMutex.Lock()
+	if !gui.lastResourcesRefresh.IsZero() && time.Since(gui.lastResourcesRefresh) < resourcesRefreshTTL {
+		gui.resourcesRefreshMutex.Unlock()
+		return
+	}
+	gui.lastResourcesRefresh = time.Now()
+	gui.resourcesRefreshMutex.Unlock()
+
+	if err := gui.reloadVolumes(); err != nil {
+		gui.Log.Error(err)
+	}
+	if err := gui.reloadNetworks(); err != nil {
+		gui.Log.Error(err)
+	}
+	if err := gui.reloadImages(); err != nil {
+		gui.Log.Error(err)
+	}
 }
 
 func (gui *Gui) listenForEvents(ctx context.Context, refresh func()) {
@@ -473,22 +549,89 @@ func (gui *Gui) Update(f func() error) {
 	gui.g.Update(func(*gocui.Gui) error { return f() })
 }
 
+// monitorContainerStats keeps a stats stream attached to the containers we are
+// currently displaying. Stats streaming is expensive for the docker daemon, so
+// we deliberately do not monitor every container on the host, and never monitor
+// containers that aren't running.
 func (gui *Gui) monitorContainerStats(ctx context.Context) {
-	// periodically loop through running containers and see if we need to create a monitor goroutine for any
-	// every second we check if we need to spawn a new goroutine
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(statsMonitorInterval)
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			for _, container := range gui.Panels.Containers.List.GetAllItems() {
-				if !container.MonitoringStats {
-					go gui.DockerCommand.CreateClientStatMonitor(container)
-				}
-			}
+			gui.reconcileStatsMonitors(ctx)
 		}
+	}
+}
+
+// monitoredContainers returns the containers whose stats are on screen: the
+// selection in the containers panel and the container behind the selected
+// service.
+func (gui *Gui) monitoredContainers() []*commands.Container {
+	containers := []*commands.Container{}
+
+	if ctr, err := gui.Panels.Containers.GetSelectedItem(); err == nil && ctr != nil {
+		containers = append(containers, ctr)
+	}
+
+	if service, err := gui.Panels.Services.GetSelectedItem(); err == nil && service != nil && service.Container != nil {
+		containers = append(containers, service.Container)
+	}
+
+	return containers
+}
+
+func (gui *Gui) reconcileStatsMonitors(ctx context.Context) {
+	targets := make(map[string]*commands.Container)
+	for _, ctr := range gui.monitoredContainers() {
+		// A stopped container has no stats to stream, and asking for them used to
+		// fail and be retried once a second forever.
+		if ctr.Container.State != "running" {
+			continue
+		}
+		targets[ctr.ID] = ctr
+	}
+
+	gui.statsMonitorMutex.Lock()
+	defer gui.statsMonitorMutex.Unlock()
+
+	if gui.statsMonitorCancels == nil {
+		gui.statsMonitorCancels = map[string]context.CancelFunc{}
+	}
+
+	// Detach monitors for containers we're no longer displaying.
+	for id, cancel := range gui.statsMonitorCancels {
+		if _, ok := targets[id]; ok {
+			continue
+		}
+		cancel()
+		delete(gui.statsMonitorCancels, id)
+	}
+
+	// Attach monitors to newly displayed containers.
+	for id, ctr := range targets {
+		if _, ok := gui.statsMonitorCancels[id]; ok {
+			continue
+		}
+		if ctr.StatsMonitorPending() {
+			continue
+		}
+
+		monitorCtx, cancel := context.WithCancel(ctx)
+		gui.statsMonitorCancels[id] = cancel
+
+		go func(id string, ctr *commands.Container) {
+			defer func() {
+				gui.statsMonitorMutex.Lock()
+				delete(gui.statsMonitorCancels, id)
+				gui.statsMonitorMutex.Unlock()
+			}()
+
+			gui.DockerCommand.CreateClientStatMonitor(monitorCtx, ctr)
+		}(id, ctr)
 	}
 }
 

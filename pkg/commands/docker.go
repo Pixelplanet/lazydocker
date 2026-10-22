@@ -31,6 +31,21 @@ import (
 
 const (
 	dockerHostEnvKey = "DOCKER_HOST"
+
+	// maxConcurrentInspects bounds how many container inspects run at once.
+	// Inspects used to fan out one goroutine per container, which floods the
+	// docker daemon on hosts that have many containers.
+	maxConcurrentInspects = 8
+
+	// composeServiceNamesTTL is how long we cache the output of
+	// `docker compose config --services`. It forks a subprocess and its output
+	// only changes when the compose files do.
+	composeServiceNamesTTL = 10 * time.Second
+
+	// statsMonitorRetryDelay is how long we wait before reattaching a stats
+	// stream that failed, so a container whose stats can't be read isn't retried
+	// in a tight loop.
+	statsMonitorRetryDelay = 30 * time.Second
 )
 
 // DockerCommand is our main docker interface
@@ -48,6 +63,10 @@ type DockerCommand struct {
 	ServiceMutex     deadlock.Mutex
 
 	Closers []io.Closer
+
+	composeServicesCacheMutex deadlock.Mutex
+	composeServicesCache      []string
+	composeServicesCacheTime  time.Time
 }
 
 var _ io.Closer = &DockerCommand{}
@@ -189,14 +208,31 @@ func (c *DockerCommand) Close() error {
 	return utils.CloseMany(c.Closers)
 }
 
-func (c *DockerCommand) CreateClientStatMonitor(container *Container) {
-	container.MonitoringStats = true
-	stream, err := c.Client.ContainerStats(context.Background(), container.ID, true)
+// CreateClientStatMonitor streams stats for a single container until ctx is
+// cancelled. Callers should only attach a monitor for containers whose stats are
+// actually on screen: stats streaming is expensive for the docker daemon, so a
+// stream per container on the host is not affordable.
+func (c *DockerCommand) CreateClientStatMonitor(ctx context.Context, container *Container) {
+	if !container.StartStatsMonitor() {
+		return
+	}
+
+	// Until we know the stream ended cleanly we assume it failed, so that a
+	// broken container backs off instead of being retried immediately.
+	streamFailed := true
+	defer func() {
+		retryAfter := time.Duration(0)
+		if streamFailed {
+			retryAfter = statsMonitorRetryDelay
+		}
+		container.StopStatsMonitor(retryAfter)
+	}()
+
+	stream, err := c.Client.ContainerStats(ctx, container.ID, true)
 	if err != nil {
 		// not creating error panel because if we've disconnected from docker we'll
 		// have already created an error panel
 		c.Log.Error(err)
-		container.MonitoringStats = false
 		return
 	}
 
@@ -220,7 +256,9 @@ func (c *DockerCommand) CreateClientStatMonitor(container *Container) {
 		container.appendStats(recordedStats, c.Config.UserConfig.Stats.MaxDuration)
 	}
 
-	container.MonitoringStats = false
+	// The stream ending means either the container stopped or the caller
+	// cancelled us. Neither is a failure, so allow an immediate re-attach.
+	streamFailed = false
 }
 
 func (c *DockerCommand) RefreshContainersAndServices(currentContainers []*Container) ([]*Container, []*Service, error) {
@@ -424,7 +462,10 @@ func (c *DockerCommand) GetContainers(existingContainers []*Container) ([]*Conta
 		ownContainers[i] = newContainer
 	}
 
-	c.SetContainerDetails(ownContainers)
+	// Note that we deliberately do not inspect every container here. `docker ps
+	// -a` can return hundreds of entries on a busy host, and inspecting each one
+	// on every refresh is what pinned the docker daemon. Callers load details for
+	// just the containers they display, via RefreshContainerDetails.
 
 	return ownContainers, nil
 }
@@ -435,17 +476,11 @@ func (c *DockerCommand) GetServices() ([]*Service, error) {
 		return nil, nil
 	}
 
-	composeCommand := c.Config.UserConfig.CommandTemplates.DockerCompose
-	output, err := c.OSCommand.RunCommandWithOutput(fmt.Sprintf("%s config --services", composeCommand))
+	lines, err := c.composeServiceNames()
 	if err != nil {
 		return nil, err
 	}
 
-	// output looks like:
-	// service1
-	// service2
-
-	lines := utils.SplitLines(output)
 	services := make([]*Service, len(lines))
 	for i, str := range lines {
 		services[i] = &Service{
@@ -461,6 +496,36 @@ func (c *DockerCommand) GetServices() ([]*Service, error) {
 	return services, nil
 }
 
+// composeServiceNames returns the service names from `docker compose config
+// --services`, caching the result for a short while. The command forks a
+// subprocess and its output only changes when the compose files change, so
+// running it on every refresh (many times a second on a busy host) was pure
+// waste.
+func (c *DockerCommand) composeServiceNames() ([]string, error) {
+	c.composeServicesCacheMutex.Lock()
+	defer c.composeServicesCacheMutex.Unlock()
+
+	if !c.composeServicesCacheTime.IsZero() && time.Since(c.composeServicesCacheTime) < composeServiceNamesTTL {
+		return c.composeServicesCache, nil
+	}
+
+	composeCommand := c.Config.UserConfig.CommandTemplates.DockerCompose
+	output, err := c.OSCommand.RunCommandWithOutput(fmt.Sprintf("%s config --services", composeCommand))
+	if err != nil {
+		return nil, err
+	}
+
+	// output looks like:
+	// service1
+	// service2
+	lines := utils.SplitLines(output)
+
+	c.composeServicesCache = lines
+	c.composeServicesCacheTime = time.Now()
+
+	return lines, nil
+}
+
 func (c *DockerCommand) RefreshContainerDetails(containers []*Container) error {
 	c.ContainerMutex.Lock()
 	defer c.ContainerMutex.Unlock()
@@ -473,20 +538,39 @@ func (c *DockerCommand) RefreshContainerDetails(containers []*Container) error {
 // Attaches the details returned from docker inspect to each of the containers
 // this contains a bit more info than what you get from the go-docker client
 func (c *DockerCommand) SetContainerDetails(containers []*Container) {
+	if len(containers) == 0 {
+		return
+	}
+
+	// Inspects run in a bounded pool. We used to spawn one goroutine per
+	// container, so a host with a few hundred containers issued a few hundred
+	// concurrent requests to the daemon on every single refresh.
+	sem := make(chan struct{}, maxConcurrentInspects)
 	wg := sync.WaitGroup{}
+	seen := make(map[string]struct{}, len(containers))
+
 	for _, ctr := range containers {
 		ctr := ctr
+		if _, ok := seen[ctr.ID]; ok {
+			continue
+		}
+		seen[ctr.ID] = struct{}{}
+
 		wg.Add(1)
+		sem <- struct{}{}
 		go func() {
+			defer wg.Done()
+			defer func() { <-sem }()
+
 			details, err := c.Client.ContainerInspect(context.Background(), ctr.ID)
 			if err != nil {
 				c.Log.Error(err)
-			} else {
-				ctr.Details = details
+				return
 			}
-			wg.Done()
+			ctr.Details = details
 		}()
 	}
+
 	wg.Wait()
 }
 

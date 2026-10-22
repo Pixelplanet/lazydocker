@@ -125,7 +125,7 @@ func (gui *Gui) handleNetworksRemoveMenu(g *gocui.Gui, v *gocui.View) error {
 					if err := network.Remove(); err != nil {
 						return gui.createErrorPanel(err.Error())
 					}
-					return nil
+					return gui.reloadNetworks()
 				})
 			},
 		}
@@ -144,7 +144,7 @@ func (gui *Gui) handlePruneNetworks() error {
 			if err != nil {
 				return gui.createErrorPanel(err.Error())
 			}
-			return nil
+			return gui.reloadNetworks()
 		})
 	}, nil)
 }

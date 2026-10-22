@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -39,6 +40,64 @@ type Container struct {
 	Tr              *i18n.TranslationSet
 
 	StatsMutex deadlock.Mutex
+
+	// statsMonitorMutex guards the stats stream bookkeeping below. It is read and
+	// written both by the GUI's monitor loop and by the goroutine consuming each
+	// stream.
+	statsMonitorMutex   deadlock.Mutex
+	statsMonitorRunning bool
+	statsRetryAfter     time.Time
+}
+
+// StartStatsMonitor claims the stats stream for this container. It returns false
+// if a stream is already attached, or if a previous attempt failed and we are
+// still inside the backoff window. The backoff keeps a container whose stats
+// cannot be read (for example a stopped one) from being retried every second.
+func (c *Container) StartStatsMonitor() bool {
+	c.statsMonitorMutex.Lock()
+	defer c.statsMonitorMutex.Unlock()
+
+	if c.statsMonitorRunning || time.Now().Before(c.statsRetryAfter) {
+		return false
+	}
+
+	c.statsMonitorRunning = true
+	c.MonitoringStats = true
+
+	return true
+}
+
+// StopStatsMonitor releases the stats stream. A non-zero retryAfter delays the
+// next attempt by that amount of time.
+func (c *Container) StopStatsMonitor(retryAfter time.Duration) {
+	c.statsMonitorMutex.Lock()
+	defer c.statsMonitorMutex.Unlock()
+
+	c.statsMonitorRunning = false
+	c.MonitoringStats = false
+
+	if retryAfter > 0 {
+		c.statsRetryAfter = time.Now().Add(retryAfter)
+	}
+}
+
+// StatsMonitorRunning reports whether a stats stream is currently attached to
+// this container.
+func (c *Container) StatsMonitorRunning() bool {
+	c.statsMonitorMutex.Lock()
+	defer c.statsMonitorMutex.Unlock()
+
+	return c.statsMonitorRunning
+}
+
+// StatsMonitorPending reports whether a stream is attached or a retry is
+// currently backed off. The monitor loop uses this to avoid spawning a
+// goroutine that would immediately give up.
+func (c *Container) StatsMonitorPending() bool {
+	c.statsMonitorMutex.Lock()
+	defer c.statsMonitorMutex.Unlock()
+
+	return c.statsMonitorRunning || time.Now().Before(c.statsRetryAfter)
 }
 
 // Remove removes the container

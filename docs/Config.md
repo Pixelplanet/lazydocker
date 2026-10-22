@@ -60,6 +60,11 @@ gui:
   # containers panel. "long": full words (default), "short": one or two characters,
   # "icon": unicode emoji.
   containerStatusHealthStyle: "long"
+  # How many seconds to wait between background refreshes of container details.
+  # Raise this on hosts with a lot of containers if lazydocker is loading the
+  # docker daemon too heavily. Set to 0 to disable periodic refreshing entirely;
+  # lazydocker still updates in response to docker events.
+  refreshInterval: 5
 logs:
   timestamps: false
   since: '60m' # set to '' to show all logs
