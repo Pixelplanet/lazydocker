@@ -5,102 +5,106 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 ## Project
 
 <pre>
-  <kbd>e</kbd>: verander de lazydocker configuratie
-  <kbd>o</kbd>: open de lazydocker configuratie
-  <kbd>m</kbd>: bekijk logs
-  <kbd>enter</kbd>: focus hoofdpaneel
-  <kbd>[</kbd>: vorige tab
-  <kbd>]</kbd>: volgende tab
+  <kbd>e</kbd>: edit lazydocker config
+  <kbd>o</kbd>: open lazydocker config
+  <kbd>m</kbd>: view logs
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Containers
 
 <pre>
-  <kbd>d</kbd>: verwijder
-  <kbd>e</kbd>: verberg gestopte containers
+  <kbd>d</kbd>: remove
+  <kbd>e</kbd>: hide/show stopped containers
   <kbd>p</kbd>: pause
   <kbd>s</kbd>: stop
-  <kbd>r</kbd>: herstart
-  <kbd>a</kbd>: verbinden
-  <kbd>m</kbd>: bekijk logs
+  <kbd>r</kbd>: restart
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>E</kbd>: exec shell
-  <kbd>c</kbd>: draai een vooraf bedacht aangepaste opdracht
+  <kbd>c</kbd>: run predefined custom command
   <kbd>b</kbd>: view bulk commands
   <kbd>w</kbd>: open in browser (first port is http)
-  <kbd>enter</kbd>: focus hoofdpaneel
-  <kbd>[</kbd>: vorige tab
-  <kbd>]</kbd>: volgende tab
+  <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>y</kbd>: copy to clipboard
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Diensten
+## Services
 
 <pre>
   <kbd>u</kbd>: up service
-  <kbd>d</kbd>: verwijder containers
+  <kbd>d</kbd>: remove containers
   <kbd>s</kbd>: stop
   <kbd>p</kbd>: pause
-  <kbd>r</kbd>: herstart
+  <kbd>r</kbd>: restart
   <kbd>S</kbd>: start
-  <kbd>a</kbd>: verbinden
-  <kbd>m</kbd>: bekijk logs
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>U</kbd>: up project
   <kbd>D</kbd>: down project
-  <kbd>R</kbd>: bekijk herstart opties
-  <kbd>c</kbd>: draai een vooraf bedacht aangepaste opdracht
+  <kbd>R</kbd>: view restart options
+  <kbd>c</kbd>: run predefined custom command
   <kbd>b</kbd>: view bulk commands
   <kbd>E</kbd>: exec shell
   <kbd>w</kbd>: open in browser (first port is http)
-  <kbd>enter</kbd>: focus hoofdpaneel
-  <kbd>[</kbd>: vorige tab
-  <kbd>]</kbd>: volgende tab
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Images
 
 <pre>
-  <kbd>c</kbd>: draai een vooraf bedacht aangepaste opdracht
-  <kbd>d</kbd>: verwijder image
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove image
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: focus hoofdpaneel
-  <kbd>[</kbd>: vorige tab
-  <kbd>]</kbd>: volgende tab
+  <kbd>p</kbd>: pull latest image
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Volumes
 
 <pre>
-  <kbd>c</kbd>: draai een vooraf bedacht aangepaste opdracht
-  <kbd>d</kbd>: verwijder volume
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove volume
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: focus hoofdpaneel
-  <kbd>[</kbd>: vorige tab
-  <kbd>]</kbd>: volgende tab
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Networks
 
 <pre>
-  <kbd>c</kbd>: draai een vooraf bedacht aangepaste opdracht
-  <kbd>d</kbd>: verwijder network
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove network
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: focus hoofdpaneel
-  <kbd>[</kbd>: vorige tab
-  <kbd>]</kbd>: volgende tab
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Hoofd
+## Main
 
 <pre>
-  <kbd>esc</kbd>: terug
+  <kbd>esc</kbd>: return
+  <kbd>y</kbd>: copy to clipboard
 </pre>
 
-## Globaal
+## Global
 
 <pre>
   <kbd>+</kbd>: next screen mode (normal/half/fullscreen)

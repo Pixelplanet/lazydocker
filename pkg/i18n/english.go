@@ -27,7 +27,6 @@ type TranslationSet struct {
 	CannotAccessDockerSocketError              string
 	CannotKillChildError                       string
 
-	Donate                      string
 	Cancel                      string
 	CustomCommandTitle          string
 	BulkCommandTitle            string
@@ -220,7 +219,6 @@ func englishSet() TranslationSet {
 		CannotAccessDockerSocketError:     "Can't access docker socket at: unix:///var/run/docker.sock\nRun lazydocker as root or read https://docs.docker.com/install/linux/linux-postinstall/",
 		CannotKillChildError:              "Waited three seconds for child process to stop. There may be an orphan process that continues to run on your system.",
 
-		Donate:  "Donate",
 		Confirm: "Confirm",
 
 		Return:                      "return",

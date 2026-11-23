@@ -48,10 +48,7 @@ func copyViaOSC52(text string) error {
 	encoded := base64.StdEncoding.EncodeToString([]byte(text))
 	sequence := buildOSC52(encoded)
 
-	f, shouldClose, err := openTerminal()
-	if err != nil {
-		return err
-	}
+	f, shouldClose := openTerminal()
 	if shouldClose {
 		defer f.Close()
 	}
@@ -130,12 +127,12 @@ func buildOSC52(encoded string) string {
 // openTerminal returns a writer connected to the controlling terminal so that
 // the escape sequence is delivered even when stdout is redirected. The boolean
 // return value indicates whether the caller is responsible for closing it.
-func openTerminal() (*os.File, bool, error) {
+func openTerminal() (*os.File, bool) {
 	if f, err := os.OpenFile(terminalDevice, os.O_WRONLY, 0); err == nil {
-		return f, true, nil
+		return f, true
 	}
 
 	// Fall back to stdout when the terminal device is unavailable (e.g. when
 	// there is no controlling tty). Never close stdout.
-	return os.Stdout, false, nil
+	return os.Stdout, false
 }

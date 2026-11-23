@@ -11,9 +11,6 @@ github.com/OpenPeeDeeP/xdg
 # github.com/boz/go-throttle v0.0.0-20160922054636-fdc4eab740c1
 ## explicit
 github.com/boz/go-throttle
-# github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
-## explicit
-github.com/cloudfoundry/jibber_jabber
 # github.com/containerd/errdefs v1.0.0
 ## explicit; go 1.20
 github.com/containerd/errdefs
@@ -164,7 +161,7 @@ github.com/integrii/flaggy
 # github.com/jesseduffield/asciigraph v0.0.0-20190605104717-6d88e39309ee
 ## explicit
 github.com/jesseduffield/asciigraph
-# github.com/jesseduffield/gocui v0.3.1-0.20240418080333-8cd33929c513
+# github.com/jesseduffield/gocui v0.3.1-0.20240418080333-8cd33929c513 => ./third_party/gocui
 ## explicit; go 1.12
 github.com/jesseduffield/gocui
 # github.com/jesseduffield/kill v0.0.0-20220618033138-bfbe04675d10
@@ -207,10 +204,6 @@ github.com/moby/sys/sequential
 # github.com/moby/term v0.5.0
 ## explicit; go 1.18
 # github.com/morikuni/aec v1.0.0
-## explicit
-# github.com/onsi/ginkgo v1.8.0
-## explicit
-# github.com/onsi/gomega v1.5.0
 ## explicit
 # github.com/opencontainers/go-digest v1.0.0
 ## explicit; go 1.13
@@ -308,3 +301,4 @@ golang.org/x/xerrors/internal
 gopkg.in/yaml.v3
 # gotest.tools/v3 v3.5.1
 ## explicit; go 1.17
+# github.com/jesseduffield/gocui => ./third_party/gocui

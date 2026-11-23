@@ -84,7 +84,7 @@ git fetch upstream
 git merge upstream/master
 ```
 
-`vendor/github.com/jesseduffield/gocui/view.go` carries a local patch (search for "lazydocker patch"). `go mod vendor` overwrites it, so re-apply it after re-vendoring.
+The `gocui` UI library is built from [third_party/gocui](third_party/gocui), a copy of the upstream version with one local patch in `view.go` (search for "lazydocker patch"). `go.mod` points at that directory, so `go mod vendor` keeps the patch. If upstream moves to a newer gocui, copy the new version into `third_party/gocui`, re-apply the patch and run that directory's tests.
 
 ## Development
 

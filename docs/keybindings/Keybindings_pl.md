@@ -2,105 +2,109 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 # Lazydocker menu
 
-## Projekt
+## Project
 
 <pre>
-  <kbd>e</kbd>: edytuj konfigurację
-  <kbd>o</kbd>: otwórz konfigurację
-  <kbd>m</kbd>: pokaż logi
-  <kbd>enter</kbd>: skup na głównym panelu
-  <kbd>[</kbd>: poprzednia zakładka
-  <kbd>]</kbd>: następna zakładka
+  <kbd>e</kbd>: edit lazydocker config
+  <kbd>o</kbd>: open lazydocker config
+  <kbd>m</kbd>: view logs
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Kontenery
+## Containers
 
 <pre>
-  <kbd>d</kbd>: usuń
+  <kbd>d</kbd>: remove
   <kbd>e</kbd>: hide/show stopped containers
   <kbd>p</kbd>: pause
-  <kbd>s</kbd>: zatrzymaj
-  <kbd>r</kbd>: restartuj
-  <kbd>a</kbd>: przyczep
-  <kbd>m</kbd>: pokaż logi
+  <kbd>s</kbd>: stop
+  <kbd>r</kbd>: restart
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>E</kbd>: exec shell
-  <kbd>c</kbd>: wykonaj predefiniowaną własną komende
+  <kbd>c</kbd>: run predefined custom command
   <kbd>b</kbd>: view bulk commands
   <kbd>w</kbd>: open in browser (first port is http)
-  <kbd>enter</kbd>: skup na głównym panelu
-  <kbd>[</kbd>: poprzednia zakładka
-  <kbd>]</kbd>: następna zakładka
+  <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>y</kbd>: copy to clipboard
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Serwisy
+## Services
 
 <pre>
   <kbd>u</kbd>: up service
-  <kbd>d</kbd>: usuń kontenery
-  <kbd>s</kbd>: zatrzymaj
+  <kbd>d</kbd>: remove containers
+  <kbd>s</kbd>: stop
   <kbd>p</kbd>: pause
-  <kbd>r</kbd>: restartuj
+  <kbd>r</kbd>: restart
   <kbd>S</kbd>: start
-  <kbd>a</kbd>: przyczep
-  <kbd>m</kbd>: pokaż logi
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>U</kbd>: up project
   <kbd>D</kbd>: down project
-  <kbd>R</kbd>: pokaż opcje restartu
-  <kbd>c</kbd>: wykonaj predefiniowaną własną komende
+  <kbd>R</kbd>: view restart options
+  <kbd>c</kbd>: run predefined custom command
   <kbd>b</kbd>: view bulk commands
   <kbd>E</kbd>: exec shell
   <kbd>w</kbd>: open in browser (first port is http)
-  <kbd>enter</kbd>: skup na głównym panelu
-  <kbd>[</kbd>: poprzednia zakładka
-  <kbd>]</kbd>: następna zakładka
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Obrazy
+## Images
 
 <pre>
-  <kbd>c</kbd>: wykonaj predefiniowaną własną komende
-  <kbd>d</kbd>: usuń obraz
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove image
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: skup na głównym panelu
-  <kbd>[</kbd>: poprzednia zakładka
-  <kbd>]</kbd>: następna zakładka
+  <kbd>p</kbd>: pull latest image
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Wolumeny
+## Volumes
 
 <pre>
-  <kbd>c</kbd>: wykonaj predefiniowaną własną komende
-  <kbd>d</kbd>: usuń wolumen
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove volume
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: skup na głównym panelu
-  <kbd>[</kbd>: poprzednia zakładka
-  <kbd>]</kbd>: następna zakładka
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Sieci
+## Networks
 
 <pre>
-  <kbd>c</kbd>: wykonaj predefiniowaną własną komende
-  <kbd>d</kbd>: usuń sieci
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove network
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: skup na głównym panelu
-  <kbd>[</kbd>: poprzednia zakładka
-  <kbd>]</kbd>: następna zakładka
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Główne
+## Main
 
 <pre>
-  <kbd>esc</kbd>: powrót
+  <kbd>esc</kbd>: return
+  <kbd>y</kbd>: copy to clipboard
 </pre>
 
-## Globalne
+## Global
 
 <pre>
   <kbd>+</kbd>: next screen mode (normal/half/fullscreen)

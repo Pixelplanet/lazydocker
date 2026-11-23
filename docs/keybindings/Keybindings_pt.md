@@ -2,109 +2,113 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 # Lazydocker menu
 
-## Projeto
+## Project
 
 <pre>
-  <kbd>e</kbd>: editar configuração do lazydocker
-  <kbd>o</kbd>: abrir configuração do lazydocker
-  <kbd>m</kbd>: ver logs
-  <kbd>enter</kbd>: focar no painel principal
-  <kbd>[</kbd>: aba anterior
-  <kbd>]</kbd>: próxima aba
-  <kbd>/</kbd>: filtrar lista
+  <kbd>e</kbd>: edit lazydocker config
+  <kbd>o</kbd>: open lazydocker config
+  <kbd>m</kbd>: view logs
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## Contêineres
+## Containers
 
 <pre>
-  <kbd>d</kbd>: remover
-  <kbd>e</kbd>: ocultar/mostrar contêineres parados
-  <kbd>p</kbd>: pausar
-  <kbd>s</kbd>: parar
-  <kbd>r</kbd>: reiniciar
-  <kbd>a</kbd>: anexar
-  <kbd>m</kbd>: ver logs
-  <kbd>E</kbd>: executar shell
-  <kbd>c</kbd>: executar comando personalizado predefinido
-  <kbd>b</kbd>: ver comandos em massa
-  <kbd>w</kbd>: abrir no navegador (primeira porta é http)
-  <kbd>enter</kbd>: focar no painel principal
-  <kbd>[</kbd>: aba anterior
-  <kbd>]</kbd>: próxima aba
-  <kbd>/</kbd>: filtrar lista
+  <kbd>d</kbd>: remove
+  <kbd>e</kbd>: hide/show stopped containers
+  <kbd>p</kbd>: pause
+  <kbd>s</kbd>: stop
+  <kbd>r</kbd>: restart
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
+  <kbd>E</kbd>: exec shell
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>b</kbd>: view bulk commands
+  <kbd>w</kbd>: open in browser (first port is http)
+  <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>y</kbd>: copy to clipboard
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## Serviços
+## Services
 
 <pre>
-  <kbd>u</kbd>: subir serviço
-  <kbd>d</kbd>: remover contêineres
-  <kbd>s</kbd>: parar
-  <kbd>p</kbd>: pausar
-  <kbd>r</kbd>: reiniciar
-  <kbd>S</kbd>: iniciar
-  <kbd>a</kbd>: anexar
-  <kbd>m</kbd>: ver logs
-  <kbd>U</kbd>: subir projeto
-  <kbd>D</kbd>: derrubar projeto
-  <kbd>R</kbd>: ver opções de reinício
-  <kbd>c</kbd>: executar comando personalizado predefinido
-  <kbd>b</kbd>: ver comandos em massa
-  <kbd>E</kbd>: executar shell
-  <kbd>w</kbd>: abrir no navegador (primeira porta é http)
-  <kbd>enter</kbd>: focar no painel principal
-  <kbd>[</kbd>: aba anterior
-  <kbd>]</kbd>: próxima aba
-  <kbd>/</kbd>: filtrar lista
+  <kbd>u</kbd>: up service
+  <kbd>d</kbd>: remove containers
+  <kbd>s</kbd>: stop
+  <kbd>p</kbd>: pause
+  <kbd>r</kbd>: restart
+  <kbd>S</kbd>: start
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
+  <kbd>U</kbd>: up project
+  <kbd>D</kbd>: down project
+  <kbd>R</kbd>: view restart options
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>b</kbd>: view bulk commands
+  <kbd>E</kbd>: exec shell
+  <kbd>w</kbd>: open in browser (first port is http)
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## Imagens
+## Images
 
 <pre>
-  <kbd>c</kbd>: executar comando personalizado predefinido
-  <kbd>d</kbd>: remover imagem
-  <kbd>b</kbd>: ver comandos em massa
-  <kbd>enter</kbd>: focar no painel principal
-  <kbd>[</kbd>: aba anterior
-  <kbd>]</kbd>: próxima aba
-  <kbd>/</kbd>: filtrar lista
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove image
+  <kbd>b</kbd>: view bulk commands
+  <kbd>p</kbd>: pull latest image
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
 ## Volumes
 
 <pre>
-  <kbd>c</kbd>: executar comando personalizado predefinido
-  <kbd>d</kbd>: remover volume
-  <kbd>b</kbd>: ver comandos em massa
-  <kbd>enter</kbd>: focar no painel principal
-  <kbd>[</kbd>: aba anterior
-  <kbd>]</kbd>: próxima aba
-  <kbd>/</kbd>: filtrar lista
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove volume
+  <kbd>b</kbd>: view bulk commands
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## Redes
+## Networks
 
 <pre>
-  <kbd>c</kbd>: executar comando personalizado predefinido
-  <kbd>d</kbd>: remover rede
-  <kbd>b</kbd>: ver comandos em massa
-  <kbd>enter</kbd>: focar no painel principal
-  <kbd>[</kbd>: aba anterior
-  <kbd>]</kbd>: próxima aba
-  <kbd>/</kbd>: filtrar lista
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove network
+  <kbd>b</kbd>: view bulk commands
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## Principal
+## Main
 
 <pre>
-  <kbd>esc</kbd>: retornar
+  <kbd>esc</kbd>: return
+  <kbd>y</kbd>: copy to clipboard
 </pre>
 
 ## Global
 
 <pre>
-  <kbd>+</kbd>: modo de tela seguinte (normal/meia/tela cheia)
-  <kbd>_</kbd>: modo de tela anterior
+  <kbd>+</kbd>: next screen mode (normal/half/fullscreen)
+  <kbd>_</kbd>: prev screen mode
   <kbd>1</kbd>: focus projects panel
   <kbd>2</kbd>: focus services panel
   <kbd>3</kbd>: focus containers panel

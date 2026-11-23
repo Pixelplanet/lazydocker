@@ -2,35 +2,37 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 # Lazydocker menu
 
-## Projet
+## Project
 
 <pre>
-  <kbd>e</kbd>: modifier la configuration lazydocker
-  <kbd>o</kbd>: ouvrir la configuration lazydocker
-  <kbd>m</kbd>: voir les enregistrements
-  <kbd>enter</kbd>: focus panneau principal
-  <kbd>[</kbd>: onglet précédent
-  <kbd>]</kbd>: onglet suivant
+  <kbd>e</kbd>: edit lazydocker config
+  <kbd>o</kbd>: open lazydocker config
+  <kbd>m</kbd>: view logs
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Conteneurs
+## Containers
 
 <pre>
-  <kbd>d</kbd>: supprimer
-  <kbd>e</kbd>: cacher/montrer les conteneurs arrêtés
+  <kbd>d</kbd>: remove
+  <kbd>e</kbd>: hide/show stopped containers
   <kbd>p</kbd>: pause
-  <kbd>s</kbd>: arrêter
-  <kbd>r</kbd>: redémarrer
-  <kbd>a</kbd>: attacher
-  <kbd>m</kbd>: voir les enregistrements
-  <kbd>E</kbd>: exécuter le shell
-  <kbd>c</kbd>: exécuter une commande prédéfinie
-  <kbd>b</kbd>: voir les commandes groupées
-  <kbd>w</kbd>: ouvrir dans le navigateur (le premier port est http)
-  <kbd>enter</kbd>: focus panneau principal
-  <kbd>[</kbd>: onglet précédent
-  <kbd>]</kbd>: onglet suivant
+  <kbd>s</kbd>: stop
+  <kbd>r</kbd>: restart
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
+  <kbd>E</kbd>: exec shell
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>b</kbd>: view bulk commands
+  <kbd>w</kbd>: open in browser (first port is http)
+  <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>y</kbd>: copy to clipboard
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
@@ -38,66 +40,68 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 <pre>
   <kbd>u</kbd>: up service
-  <kbd>d</kbd>: supprimer les conteneurs
-  <kbd>s</kbd>: arrêter
+  <kbd>d</kbd>: remove containers
+  <kbd>s</kbd>: stop
   <kbd>p</kbd>: pause
-  <kbd>r</kbd>: redémarrer
-  <kbd>S</kbd>: démarrer
-  <kbd>a</kbd>: attacher
-  <kbd>m</kbd>: voir les enregistrements
+  <kbd>r</kbd>: restart
+  <kbd>S</kbd>: start
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>U</kbd>: up project
   <kbd>D</kbd>: down project
-  <kbd>R</kbd>: voir les options de redémarrage
-  <kbd>c</kbd>: exécuter une commande prédéfinie
-  <kbd>b</kbd>: voir les commandes groupées
-  <kbd>E</kbd>: exécuter le shell
-  <kbd>w</kbd>: ouvrir dans le navigateur (le premier port est http)
-  <kbd>enter</kbd>: focus panneau principal
-  <kbd>[</kbd>: onglet précédent
-  <kbd>]</kbd>: onglet suivant
+  <kbd>R</kbd>: view restart options
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>b</kbd>: view bulk commands
+  <kbd>E</kbd>: exec shell
+  <kbd>w</kbd>: open in browser (first port is http)
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Images
 
 <pre>
-  <kbd>c</kbd>: exécuter une commande prédéfinie
-  <kbd>d</kbd>: supprimer l'image
-  <kbd>b</kbd>: voir les commandes groupées
-  <kbd>enter</kbd>: focus panneau principal
-  <kbd>[</kbd>: onglet précédent
-  <kbd>]</kbd>: onglet suivant
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove image
+  <kbd>b</kbd>: view bulk commands
+  <kbd>p</kbd>: pull latest image
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Volumes
 
 <pre>
-  <kbd>c</kbd>: exécuter une commande prédéfinie
-  <kbd>d</kbd>: supprimer le volume
-  <kbd>b</kbd>: voir les commandes groupées
-  <kbd>enter</kbd>: focus panneau principal
-  <kbd>[</kbd>: onglet précédent
-  <kbd>]</kbd>: onglet suivant
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove volume
+  <kbd>b</kbd>: view bulk commands
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Réseaux
+## Networks
 
 <pre>
-  <kbd>c</kbd>: exécuter une commande prédéfinie
-  <kbd>d</kbd>: supprimer le réseau
-  <kbd>b</kbd>: voir les commandes groupées
-  <kbd>enter</kbd>: focus panneau principal
-  <kbd>[</kbd>: onglet précédent
-  <kbd>]</kbd>: onglet suivant
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove network
+  <kbd>b</kbd>: view bulk commands
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Principal
+## Main
 
 <pre>
-  <kbd>esc</kbd>: retour
+  <kbd>esc</kbd>: return
+  <kbd>y</kbd>: copy to clipboard
 </pre>
 
 ## Global

@@ -1,110 +1,114 @@
 _This file is auto-generated. To update, make the changes in the pkg/i18n directory and then run `go run scripts/cheatsheet/main.go generate` from the project root._
 
-# Lazydocker 菜单
+# Lazydocker menu
 
-## 项目
+## Project
 
 <pre>
-  <kbd>e</kbd>: 编辑lazydocker配置
-  <kbd>o</kbd>: 打开lazydocker配置
-  <kbd>m</kbd>: 查看日志
-  <kbd>enter</kbd>: 聚焦主面板
-  <kbd>[</kbd>: 上一个选项卡
-  <kbd>]</kbd>: 下一个选项卡
-  <kbd>/</kbd>: 过滤列表
+  <kbd>e</kbd>: edit lazydocker config
+  <kbd>o</kbd>: open lazydocker config
+  <kbd>m</kbd>: view logs
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## 容器
+## Containers
 
 <pre>
-  <kbd>d</kbd>: 移除
-  <kbd>e</kbd>: 隐藏/显示已停止的容器
-  <kbd>p</kbd>: 暂停
-  <kbd>s</kbd>: 停止
-  <kbd>r</kbd>: 重新启动
+  <kbd>d</kbd>: remove
+  <kbd>e</kbd>: hide/show stopped containers
+  <kbd>p</kbd>: pause
+  <kbd>s</kbd>: stop
+  <kbd>r</kbd>: restart
   <kbd>a</kbd>: attach
-  <kbd>m</kbd>: 查看日志
-  <kbd>E</kbd>: 执行shell
-  <kbd>c</kbd>: 运行预定义的自定义命令
-  <kbd>b</kbd>: 查看批量命令
-  <kbd>w</kbd>: 在浏览器中打开(第一个端口为http)
-  <kbd>enter</kbd>: 聚焦主面板
-  <kbd>[</kbd>: 上一个选项卡
-  <kbd>]</kbd>: 下一个选项卡
-  <kbd>/</kbd>: 过滤列表
+  <kbd>m</kbd>: view logs
+  <kbd>E</kbd>: exec shell
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>b</kbd>: view bulk commands
+  <kbd>w</kbd>: open in browser (first port is http)
+  <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>y</kbd>: copy to clipboard
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## 服务
+## Services
 
 <pre>
-  <kbd>u</kbd>: 启动服务
-  <kbd>d</kbd>: 移除容器
-  <kbd>s</kbd>: 停止
-  <kbd>p</kbd>: 暂停
-  <kbd>r</kbd>: 重新启动
-  <kbd>S</kbd>: 启动项目
+  <kbd>u</kbd>: up service
+  <kbd>d</kbd>: remove containers
+  <kbd>s</kbd>: stop
+  <kbd>p</kbd>: pause
+  <kbd>r</kbd>: restart
+  <kbd>S</kbd>: start
   <kbd>a</kbd>: attach
-  <kbd>m</kbd>: 查看日志
-  <kbd>U</kbd>: 创建并启动容器
-  <kbd>D</kbd>: 停止并移除容器
-  <kbd>R</kbd>: 查看重启选项
-  <kbd>c</kbd>: 运行预定义的自定义命令
-  <kbd>b</kbd>: 查看批量命令
-  <kbd>E</kbd>: 执行shell
-  <kbd>w</kbd>: 在浏览器中打开(第一个端口为http)
-  <kbd>enter</kbd>: 聚焦主面板
-  <kbd>[</kbd>: 上一个选项卡
-  <kbd>]</kbd>: 下一个选项卡
-  <kbd>/</kbd>: 过滤列表
+  <kbd>m</kbd>: view logs
+  <kbd>U</kbd>: up project
+  <kbd>D</kbd>: down project
+  <kbd>R</kbd>: view restart options
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>b</kbd>: view bulk commands
+  <kbd>E</kbd>: exec shell
+  <kbd>w</kbd>: open in browser (first port is http)
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## 镜像
+## Images
 
 <pre>
-  <kbd>c</kbd>: 运行预定义的自定义命令
-  <kbd>d</kbd>: 移除镜像
-  <kbd>b</kbd>: 查看批量命令
-  <kbd>enter</kbd>: 聚焦主面板
-  <kbd>[</kbd>: 上一个选项卡
-  <kbd>]</kbd>: 下一个选项卡
-  <kbd>/</kbd>: 过滤列表
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove image
+  <kbd>b</kbd>: view bulk commands
+  <kbd>p</kbd>: pull latest image
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## 卷
+## Volumes
 
 <pre>
-  <kbd>c</kbd>: 运行预定义的自定义命令
-  <kbd>d</kbd>: 移除卷
-  <kbd>b</kbd>: 查看批量命令
-  <kbd>enter</kbd>: 聚焦主面板
-  <kbd>[</kbd>: 上一个选项卡
-  <kbd>]</kbd>: 下一个选项卡
-  <kbd>/</kbd>: 过滤列表
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove volume
+  <kbd>b</kbd>: view bulk commands
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## 网络
+## Networks
 
 <pre>
-  <kbd>c</kbd>: 运行预定义的自定义命令
-  <kbd>d</kbd>: 移除网络
-  <kbd>b</kbd>: 查看批量命令
-  <kbd>enter</kbd>: 聚焦主面板
-  <kbd>[</kbd>: 上一个选项卡
-  <kbd>]</kbd>: 下一个选项卡
-  <kbd>/</kbd>: 过滤列表
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove network
+  <kbd>b</kbd>: view bulk commands
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
+  <kbd>/</kbd>: filter list
 </pre>
 
-## 主要
+## Main
 
 <pre>
-  <kbd>esc</kbd>: 返回
+  <kbd>esc</kbd>: return
+  <kbd>y</kbd>: copy to clipboard
 </pre>
 
-## 全局
+## Global
 
 <pre>
-  <kbd>+</kbd>: 下一个屏幕模式（正常/半屏/全屏）
-  <kbd>_</kbd>: 上一个屏幕模式
+  <kbd>+</kbd>: next screen mode (normal/half/fullscreen)
+  <kbd>_</kbd>: prev screen mode
   <kbd>1</kbd>: focus projects panel
   <kbd>2</kbd>: focus services panel
   <kbd>3</kbd>: focus containers panel

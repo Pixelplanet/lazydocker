@@ -1,103 +1,107 @@
 _This file is auto-generated. To update, make the changes in the pkg/i18n directory and then run `go run scripts/cheatsheet/main.go generate` from the project root._
 
-# Lazydocker menü
+# Lazydocker menu
 
-## Projekt
+## Project
 
 <pre>
-  <kbd>e</kbd>: bearbeite lazydocker Konfiguration
-  <kbd>o</kbd>: öffne lazydocker Konfiguration
-  <kbd>m</kbd>: zeige Protokolle
-  <kbd>enter</kbd>: fokussieren aufs Hauptpanel
-  <kbd>[</kbd>: vorheriges Tab
-  <kbd>]</kbd>: nächstes Tab
+  <kbd>e</kbd>: edit lazydocker config
+  <kbd>o</kbd>: open lazydocker config
+  <kbd>m</kbd>: view logs
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Container
+## Containers
 
 <pre>
-  <kbd>d</kbd>: entfernen
+  <kbd>d</kbd>: remove
   <kbd>e</kbd>: hide/show stopped containers
   <kbd>p</kbd>: pause
-  <kbd>s</kbd>: anhalten
-  <kbd>r</kbd>: neustarten
-  <kbd>a</kbd>: anbinden
-  <kbd>m</kbd>: zeige Protokolle
+  <kbd>s</kbd>: stop
+  <kbd>r</kbd>: restart
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>E</kbd>: exec shell
-  <kbd>c</kbd>: führe vordefinierten benutzerdefinierten Befehl aus
+  <kbd>c</kbd>: run predefined custom command
   <kbd>b</kbd>: view bulk commands
   <kbd>w</kbd>: open in browser (first port is http)
-  <kbd>enter</kbd>: fokussieren aufs Hauptpanel
-  <kbd>[</kbd>: vorheriges Tab
-  <kbd>]</kbd>: nächstes Tab
+  <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>y</kbd>: copy to clipboard
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Dienste
+## Services
 
 <pre>
   <kbd>u</kbd>: up service
-  <kbd>d</kbd>: entferne Container
-  <kbd>s</kbd>: anhalten
+  <kbd>d</kbd>: remove containers
+  <kbd>s</kbd>: stop
   <kbd>p</kbd>: pause
-  <kbd>r</kbd>: neustarten
+  <kbd>r</kbd>: restart
   <kbd>S</kbd>: start
-  <kbd>a</kbd>: anbinden
-  <kbd>m</kbd>: zeige Protokolle
+  <kbd>a</kbd>: attach
+  <kbd>m</kbd>: view logs
   <kbd>U</kbd>: up project
   <kbd>D</kbd>: down project
-  <kbd>R</kbd>: zeige Neustartoptionen
-  <kbd>c</kbd>: führe vordefinierten benutzerdefinierten Befehl aus
+  <kbd>R</kbd>: view restart options
+  <kbd>c</kbd>: run predefined custom command
   <kbd>b</kbd>: view bulk commands
   <kbd>E</kbd>: exec shell
   <kbd>w</kbd>: open in browser (first port is http)
-  <kbd>enter</kbd>: fokussieren aufs Hauptpanel
-  <kbd>[</kbd>: vorheriges Tab
-  <kbd>]</kbd>: nächstes Tab
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Images
 
 <pre>
-  <kbd>c</kbd>: führe vordefinierten benutzerdefinierten Befehl aus
-  <kbd>d</kbd>: entferne Image
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove image
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: fokussieren aufs Hauptpanel
-  <kbd>[</kbd>: vorheriges Tab
-  <kbd>]</kbd>: nächstes Tab
+  <kbd>p</kbd>: pull latest image
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
 ## Volumes
 
 <pre>
-  <kbd>c</kbd>: führe vordefinierten benutzerdefinierten Befehl aus
-  <kbd>d</kbd>: entferne Volume
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove volume
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: fokussieren aufs Hauptpanel
-  <kbd>[</kbd>: vorheriges Tab
-  <kbd>]</kbd>: nächstes Tab
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Netzwerk
+## Networks
 
 <pre>
-  <kbd>c</kbd>: führe vordefinierten benutzerdefinierten Befehl aus
-  <kbd>d</kbd>: entferne Netzwerk
+  <kbd>c</kbd>: run predefined custom command
+  <kbd>d</kbd>: remove network
   <kbd>b</kbd>: view bulk commands
-  <kbd>enter</kbd>: fokussieren aufs Hauptpanel
-  <kbd>[</kbd>: vorheriges Tab
-  <kbd>]</kbd>: nächstes Tab
+  <kbd>enter</kbd>: focus main panel
+  <kbd>[</kbd>: previous tab
+  <kbd>]</kbd>: next tab
   <kbd>/</kbd>: filter list
 </pre>
 
-## Haupt
+## Main
 
 <pre>
-  <kbd>esc</kbd>: zurück
+  <kbd>esc</kbd>: return
+  <kbd>y</kbd>: copy to clipboard
 </pre>
 
 ## Global

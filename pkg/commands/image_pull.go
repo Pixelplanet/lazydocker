@@ -12,7 +12,7 @@ func pullImage(osCommand *OSCommand, imageName string) error {
 		return err
 	}
 
-	if osCommand.RunCommand("docker image inspect " + osCommand.Quote(imageName)) == nil {
+	if osCommand.RunCommand("docker image inspect "+osCommand.Quote(imageName)) == nil {
 		return nil
 	}
 	return err

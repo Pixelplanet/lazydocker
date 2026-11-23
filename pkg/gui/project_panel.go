@@ -5,7 +5,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazydocker/pkg/commands"
 	"github.com/jesseduffield/lazydocker/pkg/gui/panels"
@@ -152,7 +151,6 @@ func (gui *Gui) creditsStr() string {
 			"Keybindings: https://github.com/jesseduffield/lazydocker/blob/master/docs/keybindings",
 			"Config Options: https://github.com/jesseduffield/lazydocker/blob/master/docs/Config.md",
 			"Raise an Issue: https://github.com/jesseduffield/lazydocker/issues",
-			utils.ColoredString("Buy Jesse a coffee: https://github.com/sponsors/jesseduffield", color.FgMagenta), // caffeine ain't free
 			"Here's your lazydocker config when merged in with the defaults (you can open your config by pressing 'o'):",
 			utils.ColoredYamlString(configBuf.String()),
 		}, "\n\n")
