@@ -13,9 +13,23 @@ REPO="${REPO:-Pixelplanet/lazydocker}"
 
 # Update the binary that is already on the PATH if there is one, so that we
 # don't end up with two copies in different places.
+on_path() {
+    case ":$PATH:" in
+        *":$1:"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Otherwise pick a directory that is already on the PATH, so that the command
+# works straight away without having to edit shell profiles: ~/.local/bin if
+# the shell already looks there, else /usr/local/bin, which every shell does.
 if [ -z "${DIR:-}" ]; then
     if EXISTING="$(command -v lazydocker)"; then
         DIR="$(dirname "$(readlink -f "$EXISTING")")"
+    elif on_path "$HOME/.local/bin"; then
+        DIR="$HOME/.local/bin"
+    elif [ -w /usr/local/bin ] || command -v sudo >/dev/null; then
+        DIR="/usr/local/bin"
     else
         DIR="$HOME/.local/bin"
     fi
@@ -68,7 +82,10 @@ fi
 
 echo "Installed $("$DIR/lazydocker" --version | head -n 1) to $DIR/lazydocker"
 
-case ":$PATH:" in
-    *":$DIR:"*) ;;
-    *) echo "Note: $DIR is not on your PATH." ;;
-esac
+if on_path "$DIR"; then
+    echo "Run it with: lazydocker"
+else
+    echo "$DIR is not on your PATH. Run it with: $DIR/lazydocker"
+    echo "To be able to run it as 'lazydocker', add this line to ~/.profile and log in again:"
+    echo "    export PATH=\"$DIR:\$PATH\""
+fi

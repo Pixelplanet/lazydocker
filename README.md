@@ -15,7 +15,7 @@ curl -fsSL https://raw.githubusercontent.com/Pixelplanet/lazydocker/master/scrip
 Run the same command again to update. The script downloads the latest release for your architecture (amd64, arm64 or armv7), verifies its checksum and installs it.
 
 - If `lazydocker` is already on your `PATH`, that copy is replaced, using `sudo` if its directory is not writable.
-- Otherwise it is installed to `~/.local/bin`.
+- Otherwise it is installed to a directory that is already on your `PATH`, so `lazydocker` works straight away: `~/.local/bin` if your shell looks there, else `/usr/local/bin`.
 - Set `DIR` to install somewhere else, or `VERSION` to install a specific release:
 
 ```sh
