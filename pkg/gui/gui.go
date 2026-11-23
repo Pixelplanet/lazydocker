@@ -73,9 +73,11 @@ type Gui struct {
 	// stats stream attached.
 	statsMonitorCancels map[string]context.CancelFunc
 
-	// resourcesRefreshMutex guards lastResourcesRefresh.
-	resourcesRefreshMutex deadlock.Mutex
-	lastResourcesRefresh  time.Time
+	// resourcesRefreshMutex guards lastResourcesRefresh and
+	// resourcesRefreshPending.
+	resourcesRefreshMutex   deadlock.Mutex
+	lastResourcesRefresh    time.Time
+	resourcesRefreshPending bool
 }
 
 type Panels struct {
@@ -381,7 +383,20 @@ func (gui *Gui) refresh() {
 // being reloaded on every docker event.
 func (gui *Gui) refreshUnrelatedResources() {
 	gui.resourcesRefreshMutex.Lock()
-	if !gui.lastResourcesRefresh.IsZero() && time.Since(gui.lastResourcesRefresh) < resourcesRefreshTTL {
+	if wait := resourcesRefreshTTL - time.Since(gui.lastResourcesRefresh); !gui.lastResourcesRefresh.IsZero() && wait > 0 {
+		// Too soon to reload, but the event that got us here may well have
+		// changed something, so catch up once the throttle window has passed
+		// rather than showing stale lists until the next unrelated event.
+		if !gui.resourcesRefreshPending {
+			gui.resourcesRefreshPending = true
+			time.AfterFunc(wait, func() {
+				gui.resourcesRefreshMutex.Lock()
+				gui.resourcesRefreshPending = false
+				gui.resourcesRefreshMutex.Unlock()
+
+				gui.refreshUnrelatedResources()
+			})
+		}
 		gui.resourcesRefreshMutex.Unlock()
 		return
 	}
@@ -490,18 +505,6 @@ func (gui *Gui) escape() error {
 	return nil
 }
 
-func (gui *Gui) handleDonate(g *gocui.Gui, v *gocui.View) error {
-	if !gui.g.Mouse {
-		return nil
-	}
-
-	cx, _ := v.Cursor()
-	if cx > len(gui.Tr.Donate) {
-		return nil
-	}
-	return gui.OSCommand.OpenLink("https://github.com/sponsors/jesseduffield")
-}
-
 func (gui *Gui) editFile(filename string) error {
 	cmd, err := gui.OSCommand.EditFile(filename)
 	if err != nil {
@@ -607,8 +610,11 @@ func (gui *Gui) reconcileStatsMonitors(ctx context.Context) {
 		if _, ok := targets[id]; ok {
 			continue
 		}
+		// The monitor's goroutine removes its own entry once it has stopped. If we
+		// removed it here, a monitor re-attached for the same container before
+		// that goroutine exits would have its entry deleted from under it and
+		// could then never be cancelled.
 		cancel()
-		delete(gui.statsMonitorCancels, id)
 	}
 
 	// Attach monitors to newly displayed containers.
@@ -625,6 +631,7 @@ func (gui *Gui) reconcileStatsMonitors(ctx context.Context) {
 
 		go func(id string, ctr *commands.Container) {
 			defer func() {
+				cancel()
 				gui.statsMonitorMutex.Lock()
 				delete(gui.statsMonitorCancels, id)
 				gui.statsMonitorMutex.Unlock()

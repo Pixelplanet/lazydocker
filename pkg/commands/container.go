@@ -169,6 +169,13 @@ type ComposeInfo struct {
 	Service     string
 	WorkingDir  string
 	ConfigFiles []string
+	// EnvFiles are the --env-file paths the project was started with, if any.
+	EnvFiles []string
+	// ConfigHash is the hash of the service configuration the container was
+	// created from.
+	ConfigHash string
+	// ContainerNumber is the replica number of the container within its service.
+	ContainerNumber string
 }
 
 // IsComposeManaged reports whether the container is managed by docker compose.
@@ -190,13 +197,25 @@ func (c *Container) ComposeInfo() (ComposeInfo, bool) {
 		Project:    project,
 		Service:    labels["com.docker.compose.service"],
 		WorkingDir: labels["com.docker.compose.project.working_dir"],
-	}
 
-	if files := labels["com.docker.compose.project.config_files"]; files != "" {
-		info.ConfigFiles = strings.Split(files, ",")
+		ConfigFiles:     splitLabelList(labels["com.docker.compose.project.config_files"]),
+		EnvFiles:        splitLabelList(labels["com.docker.compose.project.environment_file"]),
+		ConfigHash:      labels["com.docker.compose.config-hash"],
+		ContainerNumber: labels["com.docker.compose.container-number"],
 	}
 
 	return info, true
+}
+
+// splitLabelList splits a comma-separated label value, dropping empty entries.
+func splitLabelList(value string) []string {
+	var items []string
+	for _, item := range strings.Split(value, ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
 }
 
 // UpdateRestartPolicy updates the restart policy of the container in place
@@ -255,6 +274,7 @@ func (c *Container) Recreate(ctx context.Context, opts RecreateOptions) error {
 	}
 
 	networkingConfig := buildNetworkingConfig(details, config)
+	sanitizeConfigForRecreate(details.ID, config, hostConfig)
 
 	name := strings.TrimPrefix(details.Name, "/")
 	if name == "" {
@@ -263,26 +283,85 @@ func (c *Container) Recreate(ctx context.Context, opts RecreateOptions) error {
 		return errors.New("cannot recreate container: original name is empty")
 	}
 
-	if details.State != nil && details.State.Running {
+	wasRunning := details.State != nil && details.State.Running
+	if wasRunning {
 		c.Log.Warn(fmt.Sprintf("stopping container %s before recreation", name))
 		if err := c.Client.ContainerStop(ctx, c.ID, container.StopOptions{}); err != nil {
 			return err
 		}
 	}
 
-	// The old container must be removed so its name can be reused.
-	c.Log.Warn(fmt.Sprintf("removing old container %s", name))
-	if err := c.Client.ContainerRemove(ctx, c.ID, container.RemoveOptions{Force: true}); err != nil {
-		return err
+	// restore puts the original container back the way we found it. The old
+	// container is only removed once its replacement is up, so a failed create
+	// or start (bad config, missing image, ...) never leaves the user with
+	// nothing.
+	restore := func(cause error, renamed bool) error {
+		if renamed {
+			if err := c.Client.ContainerRename(ctx, c.ID, name); err != nil {
+				return fmt.Errorf("%w (the original container could not be restored and is still named %s: %v)", cause, backupContainerName(name, details.ID), err)
+			}
+		}
+		if wasRunning {
+			if err := c.Client.ContainerStart(ctx, c.ID, container.StartOptions{}); err != nil {
+				return fmt.Errorf("%w (the original container was kept but could not be restarted: %v)", cause, err)
+			}
+		}
+		return cause
+	}
+
+	// Move the old container out of the way so its name can be reused.
+	backupName := backupContainerName(name, details.ID)
+	c.Log.Warn(fmt.Sprintf("renaming old container %s to %s", name, backupName))
+	if err := c.Client.ContainerRename(ctx, c.ID, backupName); err != nil {
+		return restore(err, false)
 	}
 
 	c.Log.Warn(fmt.Sprintf("creating new container %s", name))
 	created, err := c.Client.ContainerCreate(ctx, config, hostConfig, networkingConfig, nil, name)
 	if err != nil {
-		return err
+		return restore(err, true)
 	}
 
-	return c.Client.ContainerStart(ctx, created.ID, container.StartOptions{})
+	if err := c.Client.ContainerStart(ctx, created.ID, container.StartOptions{}); err != nil {
+		if removeErr := c.Client.ContainerRemove(ctx, created.ID, container.RemoveOptions{Force: true}); removeErr != nil {
+			return fmt.Errorf("%w (the failed replacement could not be removed, so the original container is still named %s: %v)", err, backupName, removeErr)
+		}
+		return restore(err, true)
+	}
+
+	c.Log.Warn(fmt.Sprintf("removing old container %s", backupName))
+	return c.Client.ContainerRemove(ctx, c.ID, container.RemoveOptions{Force: true})
+}
+
+// backupContainerName is the temporary name the old container carries while
+// its replacement is being created.
+func backupContainerName(name, id string) string {
+	return name + "_old_" + shortContainerID(id)
+}
+
+func shortContainerID(id string) string {
+	if len(id) > 12 {
+		return id[:12]
+	}
+	return id
+}
+
+// sanitizeConfigForRecreate drops inspected values that must not be carried
+// over to a new container.
+func sanitizeConfigForRecreate(id string, config *container.Config, hostConfig *container.HostConfig) {
+	// Docker defaults the hostname to the container's short ID. Passing that on
+	// would pin the new container to the old container's ID as its hostname.
+	if config.Hostname == shortContainerID(id) {
+		config.Hostname = ""
+	}
+
+	// A container sharing another container's network namespace inherits these
+	// from it, and Docker rejects them if they are supplied explicitly.
+	if hostConfig != nil && hostConfig.NetworkMode.IsContainer() {
+		config.Hostname = ""
+		config.Domainname = ""
+		config.ExposedPorts = nil
+	}
 }
 
 // buildNetworkingConfig reconstructs a NetworkingConfig from the inspected
@@ -294,10 +373,7 @@ func buildNetworkingConfig(details container.InspectResponse, config *container.
 		return &network.NetworkingConfig{}
 	}
 
-	shortID := details.ID
-	if len(shortID) > 12 {
-		shortID = shortID[:12]
-	}
+	shortID := shortContainerID(details.ID)
 
 	endpoints := make(map[string]*network.EndpointSettings, len(details.NetworkSettings.Networks))
 	for name, endpoint := range details.NetworkSettings.Networks {

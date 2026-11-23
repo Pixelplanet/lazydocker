@@ -156,6 +156,18 @@ type TranslationSet struct {
 	ExportedEnvTo               string
 	CannotEditComposeEnv        string
 	ConfirmationHint            string
+	RecreateFromCompose         string
+	ConfirmRecreateFromCompose  string
+	ConfirmRestoreContainerName string
+	CheckingComposeConfigStatus string
+	ComposeConfigChanged        string
+	ComposeConfigUnchanged      string
+	ComposeConfigUnknown        string
+	ComposeFilesLabel           string
+	ComposeFilesNotFound        string
+	ComposeFilesUnknown         string
+	NotComposeManaged           string
+	UpdateAllContainersFailed   string
 	LogsTitle                   string
 	ConfigTitle                 string
 	EnvTitle                    string
@@ -309,6 +321,18 @@ func englishSet() TranslationSet {
 		ExportedEnvTo:               "Exported env to",
 		CannotEditComposeEnv:        "Editing env vars is only supported for standalone containers. This container is managed by docker compose; edit your compose file instead.",
 		ConfirmationHint:            "(press y to confirm, n or esc to cancel)",
+		RecreateFromCompose:         "recreate from compose file (apply compose changes)",
+		ConfirmRecreateFromCompose:  "Are you sure you want to recreate this container from its compose file? The current container will be removed and docker compose will create a new one from the compose file as it is now, so its configuration and name may change.",
+		ConfirmRestoreContainerName: "Docker compose named the new container '{{newName}}'. It used to be '{{oldName}}'. Rename it back to '{{oldName}}'?",
+		CheckingComposeConfigStatus: "checking compose file",
+		ComposeConfigChanged:        "The compose configuration for this service has changed since the container was created.",
+		ComposeConfigUnchanged:      "The compose configuration for this service has not changed since the container was created.",
+		ComposeConfigUnknown:        "Could not tell whether the compose configuration has changed since the container was created.",
+		ComposeFilesLabel:           "Compose files:",
+		ComposeFilesNotFound:        "The compose files this container was created from cannot be found on this machine:",
+		ComposeFilesUnknown:         "This container does not record which compose files it was created from.",
+		NotComposeManaged:           "This container is not managed by docker compose.",
+		UpdateAllContainersFailed:   "Some containers could not be updated:",
 		GlobalTitle:                 "Global",
 		MainTitle:                   "Main",
 		ProjectTitle:                "Project",

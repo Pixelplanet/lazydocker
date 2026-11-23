@@ -5,6 +5,8 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFilterAliases(t *testing.T) {
@@ -152,6 +154,103 @@ func TestComposeInfo(t *testing.T) {
 	if info.ConfigFiles[1] != `C:\Projects\cloudify-3d\docker-compose.override.yml` {
 		t.Errorf("second config file = %q", info.ConfigFiles[1])
 	}
+}
+
+func TestComposeBaseCommand(t *testing.T) {
+	scenarios := []struct {
+		template string
+		expected []string
+	}{
+		{"docker compose", []string{"docker", "compose"}},
+		{"docker-compose", []string{"docker-compose"}},
+		{"docker compose -f one.yml -f two.yml", []string{"docker", "compose"}},
+		{"docker compose --file=one.yml -p local --project-directory /srv/app --ansi never", []string{"docker", "compose", "--ansi", "never"}},
+		{"", []string{"docker", "compose"}},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.template, func(t *testing.T) {
+			assert.Equal(t, s.expected, composeBaseCommand(s.template))
+		})
+	}
+}
+
+func TestComposeArgs(t *testing.T) {
+	info := ComposeInfo{
+		Project:     "shop",
+		Service:     "web",
+		WorkingDir:  "/srv/my shop",
+		ConfigFiles: []string{"/srv/my shop/compose.yml", "/srv/my shop/compose.prod.yml"},
+		EnvFiles:    []string{"/srv/my shop/prod.env"},
+	}
+
+	// The -f from the template belongs to the project lazydocker was launched
+	// in, not to the container's project, so it must not be passed on.
+	got := composeArgs("docker compose -f local.yml", info, "up", "-d", "--no-deps", "--force-recreate", "web")
+
+	assert.Equal(t, []string{
+		"docker", "compose",
+		"-p", "shop",
+		"--project-directory", "/srv/my shop",
+		"-f", "/srv/my shop/compose.yml",
+		"-f", "/srv/my shop/compose.prod.yml",
+		"--env-file", "/srv/my shop/prod.env",
+		"up", "-d", "--no-deps", "--force-recreate", "web",
+	}, got)
+}
+
+func TestParseComposeConfigHash(t *testing.T) {
+	output := "db 1111\nweb 2222\n"
+
+	assert.Equal(t, "2222", parseComposeConfigHash(output, "web"))
+	assert.Equal(t, "", parseComposeConfigHash(output, "cache"))
+	assert.Equal(t, "", parseComposeConfigHash("", "web"))
+}
+
+func TestComposeInfoExtraLabels(t *testing.T) {
+	ctr := &Container{
+		Container: container.Summary{
+			Labels: map[string]string{
+				"com.docker.compose.project":                  "shop",
+				"com.docker.compose.service":                  "web",
+				"com.docker.compose.project.config_files":     "/srv/shop/compose.yml, /srv/shop/compose.prod.yml,",
+				"com.docker.compose.project.environment_file": "/srv/shop/prod.env",
+				"com.docker.compose.config-hash":              "2222",
+				"com.docker.compose.container-number":         "1",
+			},
+		},
+	}
+
+	info, ok := ctr.ComposeInfo()
+	assert.True(t, ok)
+	assert.Equal(t, []string{"/srv/shop/compose.yml", "/srv/shop/compose.prod.yml"}, info.ConfigFiles)
+	assert.Equal(t, []string{"/srv/shop/prod.env"}, info.EnvFiles)
+	assert.Equal(t, "2222", info.ConfigHash)
+	assert.Equal(t, "1", info.ContainerNumber)
+}
+
+func TestSanitizeConfigForRecreate(t *testing.T) {
+	const id = "abcdef1234567890"
+
+	t.Run("drops the hostname docker derived from the old id", func(t *testing.T) {
+		config := &container.Config{Hostname: "abcdef123456"}
+		sanitizeConfigForRecreate(id, config, &container.HostConfig{})
+		assert.Equal(t, "", config.Hostname)
+	})
+
+	t.Run("keeps a hostname the user chose", func(t *testing.T) {
+		config := &container.Config{Hostname: "web"}
+		sanitizeConfigForRecreate(id, config, &container.HostConfig{})
+		assert.Equal(t, "web", config.Hostname)
+	})
+
+	t.Run("drops what a shared network namespace provides", func(t *testing.T) {
+		config := &container.Config{Hostname: "other", Domainname: "example.com", ExposedPorts: nat.PortSet{"80/tcp": {}}}
+		sanitizeConfigForRecreate(id, config, &container.HostConfig{NetworkMode: "container:other"})
+		assert.Equal(t, "", config.Hostname)
+		assert.Equal(t, "", config.Domainname)
+		assert.Nil(t, config.ExposedPorts)
+	})
 }
 
 func TestComposeInfoStandalone(t *testing.T) {

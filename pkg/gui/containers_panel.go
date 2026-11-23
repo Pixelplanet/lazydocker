@@ -368,7 +368,7 @@ func (gui *Gui) handleContainersRemoveMenu(g *gocui.Gui, v *gocui.View) error {
 
 func (gui *Gui) PauseContainer(container *commands.Container) error {
 	return gui.WithWaitingStatus(gui.Tr.PausingStatus, func() (err error) {
-		if container.Details.State.Paused {
+		if container.Container.State == "paused" {
 			err = container.Unpause()
 		} else {
 			err = container.Pause()

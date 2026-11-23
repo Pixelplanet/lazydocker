@@ -180,12 +180,6 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Handler:  wrappedHandler(gui.handleMenuPress),
 		},
 		{
-			ViewName: "information",
-			Key:      gocui.MouseLeft,
-			Modifier: gocui.ModNone,
-			Handler:  gui.handleDonate,
-		},
-		{
 			ViewName:    "containers",
 			Key:         'd',
 			Modifier:    gocui.ModNone,

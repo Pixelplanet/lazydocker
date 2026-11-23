@@ -20,6 +20,17 @@ import (
 // When running inside tmux or GNU screen the sequence is wrapped so that it is
 // passed through to the outer terminal.
 func CopyToClipboard(text string) error {
+	// Writing the OSC52 sequence succeeds whether or not the terminal acts on
+	// it, so it can't tell us that the copy worked. On a local session the
+	// clipboard tools are therefore the reliable choice and go first. Over SSH
+	// they would fill the remote machine's clipboard, so there OSC52 leads.
+	if !inSSHSession() {
+		if err := copyViaClipboardTool(text); err == nil {
+			return nil
+		}
+		return copyViaOSC52(text)
+	}
+
 	// First, try OSC52 (works with terminal support)
 	if err := copyViaOSC52(text); err == nil {
 		return nil
@@ -27,6 +38,10 @@ func CopyToClipboard(text string) error {
 
 	// Fall back to platform-specific tools for SSH sessions without OSC52 support
 	return copyViaClipboardTool(text)
+}
+
+func inSSHSession() bool {
+	return os.Getenv("SSH_CONNECTION") != "" || os.Getenv("SSH_TTY") != "" || os.Getenv("SSH_CLIENT") != ""
 }
 
 func copyViaOSC52(text string) error {

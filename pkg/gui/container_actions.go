@@ -214,6 +214,10 @@ func (gui *Gui) createContainerActionsMenu(ctr *commands.Container) error {
 			OnPress:      func() error { return gui.recreateContainer(ctr, false, nil) },
 		},
 		{
+			LabelColumns: []string{gui.Tr.RecreateFromCompose},
+			OnPress:      func() error { return gui.handleRecreateFromCompose(ctr) },
+		},
+		{
 			LabelColumns: []string{gui.Tr.EditEnvAndRecreate},
 			OnPress:      func() error { return gui.handleEditEnvAndRecreate(ctr) },
 		},
@@ -259,6 +263,76 @@ func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []s
 			return gui.refreshContainersAndServices()
 		})
 	}, nil)
+}
+
+// handleRecreateFromCompose recreates a compose-managed container through
+// docker compose, so that changes made to its compose files since it was
+// created are applied. This is the counterpart to recreateContainer, which
+// clones the existing container and therefore never sees those changes.
+func (gui *Gui) handleRecreateFromCompose(ctr *commands.Container) error {
+	info, ok := ctr.ComposeInfo()
+	if !ok {
+		return gui.createErrorPanel(gui.Tr.NotComposeManaged)
+	}
+	if len(info.ConfigFiles) == 0 {
+		return gui.createErrorPanel(gui.Tr.ComposeFilesUnknown)
+	}
+	if missing := info.MissingConfigFiles(); len(missing) > 0 {
+		return gui.createErrorPanel(gui.Tr.ComposeFilesNotFound + "\n" + strings.Join(missing, "\n"))
+	}
+
+	return gui.WithWaitingStatus(gui.Tr.CheckingComposeConfigStatus, func() error {
+		status := gui.Tr.ComposeConfigUnknown
+		switch ctr.ComposeConfigStatus() {
+		case commands.ComposeConfigChanged:
+			status = gui.Tr.ComposeConfigChanged
+		case commands.ComposeConfigUnchanged:
+			status = gui.Tr.ComposeConfigUnchanged
+		case commands.ComposeConfigUnknown:
+		}
+
+		prompt := strings.Join([]string{
+			gui.Tr.ConfirmRecreateFromCompose,
+			status,
+			gui.Tr.ComposeFilesLabel + "\n" + strings.Join(info.ConfigFiles, "\n"),
+		}, "\n\n")
+
+		return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
+			return gui.recreateFromCompose(ctr)
+		}, nil)
+	})
+}
+
+func (gui *Gui) recreateFromCompose(ctr *commands.Container) error {
+	return gui.WithWaitingStatus(gui.Tr.RecreatingStatus, func() error {
+		result, err := ctr.RecreateFromCompose(context.Background())
+		if err != nil {
+			return gui.createErrorPanel(err.Error())
+		}
+
+		if err := gui.refreshContainersAndServices(); err != nil {
+			return err
+		}
+
+		// Compose names the container itself. Other services may reach it by its
+		// old name, so offer to put that back if compose chose a different one.
+		if result.NewID == "" || result.NewName == result.OldName {
+			return nil
+		}
+
+		prompt := utils.ResolvePlaceholderString(gui.Tr.ConfirmRestoreContainerName, map[string]string{
+			"oldName": result.OldName,
+			"newName": result.NewName,
+		})
+		return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
+			return gui.WithWaitingStatus(gui.Tr.RenamingStatus, func() error {
+				if err := gui.DockerCommand.Client.ContainerRename(context.Background(), result.NewID, result.OldName); err != nil {
+					return gui.createErrorPanel(err.Error())
+				}
+				return gui.refreshContainersAndServices()
+			})
+		}, nil)
+	})
 }
 
 func (gui *Gui) startContainer(ctr *commands.Container) error {
@@ -386,15 +460,26 @@ func (gui *Gui) applyEnvAndRecreate(ctr *commands.Container, envVars []string, p
 func (gui *Gui) handleUpdateAllContainers() error {
 	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(gui.Tr.ConfirmUpdateAllContainers), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.UpdatingAllContainersStatus, func() error {
+			failures := []string{}
 			for _, ctr := range gui.Panels.Containers.List.GetAllItems() {
-				if containerIsComposeManaged(ctr) {
+				// Recreating starts the new container, so leave stopped containers
+				// (finished jobs, things the user switched off) alone.
+				if containerIsComposeManaged(ctr) || ctr.Container.State != "running" {
 					continue
 				}
 				if err := ctr.Recreate(context.Background(), commands.RecreateOptions{PullImage: true}); err != nil {
 					gui.Log.Error(err)
+					failures = append(failures, fmt.Sprintf("%s: %s", ctr.Name, strings.TrimSpace(err.Error())))
 				}
 			}
-			return gui.refreshContainersAndServices()
+
+			if err := gui.refreshContainersAndServices(); err != nil {
+				return err
+			}
+			if len(failures) > 0 {
+				return gui.createErrorPanel(gui.Tr.UpdateAllContainersFailed + "\n\n" + strings.Join(failures, "\n"))
+			}
+			return nil
 		})
 	}, nil)
 }
