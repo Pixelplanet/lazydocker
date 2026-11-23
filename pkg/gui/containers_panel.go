@@ -177,60 +177,6 @@ func (gui *Gui) containerEnv(container *commands.Container) string {
 	return output
 }
 
-func (gui *Gui) renderContainerConfig(container *commands.Container) tasks.TaskFunc {
-	return gui.NewSimpleRenderStringTask(func() string { return gui.containerConfigStr(container) })
-}
-
-func (gui *Gui) containerConfigStr(container *commands.Container) string {
-	if !container.DetailsLoaded() {
-		return gui.Tr.WaitingForContainerInfo
-	}
-
-	padding := 10
-	output := ""
-	output += utils.WithPadding("ID: ", padding) + container.ID + "\n"
-	output += utils.WithPadding("Name: ", padding) + container.Name + "\n"
-	output += utils.WithPadding("Image: ", padding) + container.Details.Config.Image + "\n"
-	output += utils.WithPadding("Command: ", padding) + strings.Join(append([]string{container.Details.Path}, container.Details.Args...), " ") + "\n"
-	output += utils.WithPadding("Labels: ", padding) + utils.FormatMap(padding, container.Details.Config.Labels)
-	output += "\n"
-
-	output += utils.WithPadding("Mounts: ", padding)
-	if len(container.Details.Mounts) > 0 {
-		output += "\n"
-		for _, mount := range container.Details.Mounts {
-			if mount.Type == "volume" {
-				output += fmt.Sprintf("%s%s %s\n", strings.Repeat(" ", padding), utils.ColoredString(string(mount.Type)+":", color.FgYellow), mount.Name)
-			} else {
-				output += fmt.Sprintf("%s%s %s:%s\n", strings.Repeat(" ", padding), utils.ColoredString(string(mount.Type)+":", color.FgYellow), mount.Source, mount.Destination)
-			}
-		}
-	} else {
-		output += "none\n"
-	}
-
-	output += utils.WithPadding("Ports: ", padding)
-	if len(container.Details.NetworkSettings.Ports) > 0 {
-		output += "\n"
-		for k, v := range container.Details.NetworkSettings.Ports {
-			for _, host := range v {
-				output += fmt.Sprintf("%s%s %s\n", strings.Repeat(" ", padding), utils.ColoredString(host.HostPort+":", color.FgYellow), k)
-			}
-		}
-	} else {
-		output += "none\n"
-	}
-
-	data, err := utils.MarshalIntoYaml(&container.Details)
-	if err != nil {
-		return fmt.Sprintf("Error marshalling container details: %v", err)
-	}
-
-	output += fmt.Sprintf("\nFull details:\n\n%s", utils.ColoredYamlString(string(data)))
-
-	return output
-}
-
 func (gui *Gui) renderContainerStats(container *commands.Container) tasks.TaskFunc {
 	return gui.NewTickerTask(TickerTaskOpts{
 		Func: func(ctx context.Context, notifyStopped chan struct{}) {

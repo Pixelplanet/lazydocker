@@ -55,6 +55,13 @@ The version in the bottom-right corner of lazydocker shows which build you are r
 
 If creating or starting the replacement fails, the original container is put back and restarted.
 
+Every confirmation names the container it is about to act on, and bulk actions list the containers they will touch.
+
+### Config tab
+
+- The container Config tab starts with a summary in sections: General, Network (mode, each network's IP, gateway, MAC and aliases, published ports, DNS), Mounts, Runtime (restart policy, limits, health), Compose and Labels. The full `docker inspect` output follows below.
+- `g` opens a menu of those sections, and of the blocks inside the full output, and scrolls straight to the one you pick.
+
 ### Other additions
 
 - **Copy to clipboard** (`y` on a container): container ID, name, image, a single environment variable, or all of them exported to a `.env` file. `y` in the main panel copies its content, or opens the environment variable list on the Env tab. Works over SSH through OSC52 and locally through `xclip`, `xsel`, `pbcopy` or `clip.exe`.

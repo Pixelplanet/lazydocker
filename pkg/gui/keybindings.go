@@ -265,10 +265,24 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 		{
 			ViewName:    "containers",
+			Key:         'g',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleConfigJump,
+			Description: gui.Tr.JumpToConfigSection,
+		},
+		{
+			ViewName:    "containers",
 			Key:         'y',
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleContainersCopyMenu,
 			Description: gui.Tr.CopyToClipboard,
+		},
+		{
+			ViewName:    "services",
+			Key:         'g',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleConfigJump,
+			Description: gui.Tr.JumpToConfigSection,
 		},
 		{
 			ViewName:    "services",
@@ -451,6 +465,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleExitMain,
 			Description: gui.Tr.Return,
+		},
+		{
+			ViewName:    "main",
+			Key:         'g',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleConfigJump,
+			Description: gui.Tr.JumpToConfigSection,
 		},
 		{
 			ViewName:    "main",

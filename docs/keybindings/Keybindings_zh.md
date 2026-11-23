@@ -29,6 +29,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
   <kbd>b</kbd>: view bulk commands
   <kbd>w</kbd>: open in browser (first port is http)
   <kbd>R</kbd>: container actions (recreate/update/rename/...)
+  <kbd>g</kbd>: jump to a section of the config tab
   <kbd>y</kbd>: copy to clipboard
   <kbd>enter</kbd>: focus main panel
   <kbd>[</kbd>: previous tab
@@ -39,6 +40,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 ## Services
 
 <pre>
+  <kbd>g</kbd>: jump to a section of the config tab
   <kbd>u</kbd>: up service
   <kbd>d</kbd>: remove containers
   <kbd>s</kbd>: stop
@@ -101,6 +103,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 <pre>
   <kbd>esc</kbd>: return
+  <kbd>g</kbd>: jump to a section of the config tab
   <kbd>y</kbd>: copy to clipboard
 </pre>
 

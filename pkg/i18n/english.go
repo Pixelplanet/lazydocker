@@ -172,6 +172,10 @@ type TranslationSet struct {
 	AndMoreContainers           string
 	ServiceLabel                string
 	NoContainersToUpdate        string
+	JumpToConfigSection         string
+	ConfigJumpTitle             string
+	ConfigJumpHint              string
+	ConfigJumpUnavailable       string
 	LogsTitle                   string
 	ConfigTitle                 string
 	EnvTitle                    string
@@ -341,6 +345,10 @@ func englishSet() TranslationSet {
 		AndMoreContainers:           "... and {{count}} more",
 		ServiceLabel:                "Service:",
 		NoContainersToUpdate:        "There are no running standalone containers to update.",
+		JumpToConfigSection:         "jump to a section of the config tab",
+		ConfigJumpTitle:             "Jump to section",
+		ConfigJumpHint:              "Press g to jump to a section.",
+		ConfigJumpUnavailable:       "Jumping to a section is only available on the Config tab",
 		GlobalTitle:                 "Global",
 		MainTitle:                   "Main",
 		ProjectTitle:                "Project",
