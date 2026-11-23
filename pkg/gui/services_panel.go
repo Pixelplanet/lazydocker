@@ -223,7 +223,7 @@ func (gui *Gui) handleServiceStop(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.Tr.StopService, func(g *gocui.Gui, v *gocui.View) error {
+	return gui.createConfirmationPanel(gui.Tr.Confirm, subjectPrompt(gui.Tr.ServiceLabel, service.Name, gui.Tr.StopService), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.StoppingStatus, func() error {
 			if !gui.isServiceFromLocalProject(service) {
 				if service.Container == nil {

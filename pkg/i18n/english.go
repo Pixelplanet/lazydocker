@@ -167,6 +167,11 @@ type TranslationSet struct {
 	ComposeFilesUnknown         string
 	NotComposeManaged           string
 	UpdateAllContainersFailed   string
+	ContainerLabel              string
+	ContainersLabel             string
+	AndMoreContainers           string
+	ServiceLabel                string
+	NoContainersToUpdate        string
 	LogsTitle                   string
 	ConfigTitle                 string
 	EnvTitle                    string
@@ -331,6 +336,11 @@ func englishSet() TranslationSet {
 		ComposeFilesUnknown:         "This container does not record which compose files it was created from.",
 		NotComposeManaged:           "This container is not managed by docker compose.",
 		UpdateAllContainersFailed:   "Some containers could not be updated:",
+		ContainerLabel:              "Container:",
+		ContainersLabel:             "Containers ({{count}}):",
+		AndMoreContainers:           "... and {{count}} more",
+		ServiceLabel:                "Service:",
+		NoContainersToUpdate:        "There are no running standalone containers to update.",
 		GlobalTitle:                 "Global",
 		MainTitle:                   "Main",
 		ProjectTitle:                "Project",

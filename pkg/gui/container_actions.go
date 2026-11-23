@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/fatih/color"
 	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazydocker/pkg/commands"
 	"github.com/jesseduffield/lazydocker/pkg/gui/types"
 	"github.com/jesseduffield/lazydocker/pkg/utils"
+	"github.com/samber/lo"
 )
 
 // splitEnvVar splits a "KEY=VALUE" environment string into its key and value.
@@ -53,6 +56,39 @@ func containerImageName(ctr *commands.Container) string {
 // always see how to confirm or cancel, regardless of the bottom options bar.
 func (gui *Gui) confirmPrompt(prompt string) string {
 	return prompt + "\n\n" + gui.Tr.ConfirmationHint
+}
+
+// maxContainersInPrompt caps how many container names a confirmation lists, so
+// that the dialog still fits on screen on a host with many containers.
+const maxContainersInPrompt = 15
+
+// subjectPrompt puts what an action is about to be applied to at the top of
+// its confirmation prompt, so it is always clear what confirming will affect.
+func subjectPrompt(label, name, prompt string) string {
+	return label + " " + utils.ColoredString(name, color.FgYellow) + "\n\n" + prompt
+}
+
+// containerPrompt names the container an action is about to be applied to.
+func (gui *Gui) containerPrompt(ctr *commands.Container, prompt string) string {
+	return subjectPrompt(gui.Tr.ContainerLabel, ctr.Name, prompt)
+}
+
+// containersPrompt lists the containers a bulk action is about to be applied
+// to.
+func (gui *Gui) containersPrompt(ctrs []*commands.Container, prompt string) string {
+	names := make([]string, 0, maxContainersInPrompt+1)
+	for i, ctr := range ctrs {
+		if i == maxContainersInPrompt {
+			names = append(names, utils.ResolvePlaceholderString(gui.Tr.AndMoreContainers, map[string]string{
+				"count": strconv.Itoa(len(ctrs) - maxContainersInPrompt),
+			}))
+			break
+		}
+		names = append(names, utils.ColoredString(ctr.Name, color.FgYellow))
+	}
+
+	label := utils.ResolvePlaceholderString(gui.Tr.ContainersLabel, map[string]string{"count": strconv.Itoa(len(ctrs))})
+	return label + "\n" + strings.Join(names, "\n") + "\n\n" + prompt
 }
 
 // copyToClipboard copies text to the clipboard (via OSC52) and flashes a status.
@@ -255,7 +291,7 @@ func (gui *Gui) recreateContainer(ctr *commands.Container, pull bool, newEnv []s
 		prompt = gui.Tr.ConfirmUpdateAndRecreate
 	}
 
-	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
+	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(gui.containerPrompt(ctr, prompt)), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.RecreatingStatus, func() error {
 			if err := ctr.Recreate(context.Background(), commands.RecreateOptions{PullImage: pull, NewEnv: newEnv}); err != nil {
 				return gui.createErrorPanel(err.Error())
@@ -297,7 +333,7 @@ func (gui *Gui) handleRecreateFromCompose(ctr *commands.Container) error {
 			gui.Tr.ComposeFilesLabel + "\n" + strings.Join(info.ConfigFiles, "\n"),
 		}, "\n\n")
 
-		return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
+		return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(gui.containerPrompt(ctr, prompt)), func(g *gocui.Gui, v *gocui.View) error {
 			return gui.recreateFromCompose(ctr)
 		}, nil)
 	})
@@ -447,26 +483,26 @@ func (gui *Gui) promptAddEnvVar(ctr *commands.Container, envVars *[]string) erro
 }
 
 func (gui *Gui) applyEnvAndRecreate(ctr *commands.Container, envVars []string, pull bool) error {
-	return gui.WithWaitingStatus(gui.Tr.RecreatingStatus, func() error {
-		if err := ctr.Recreate(context.Background(), commands.RecreateOptions{PullImage: pull, NewEnv: envVars}); err != nil {
-			return gui.createErrorPanel(err.Error())
-		}
-		return gui.refreshContainersAndServices()
-	})
+	return gui.recreateContainer(ctr, pull, envVars)
 }
 
 // --- Bulk update ---
 
 func (gui *Gui) handleUpdateAllContainers() error {
-	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(gui.Tr.ConfirmUpdateAllContainers), func(g *gocui.Gui, v *gocui.View) error {
+	// Recreating starts the new container, so leave stopped containers
+	// (finished jobs, things the user switched off) alone.
+	targets := lo.Filter(gui.Panels.Containers.List.GetAllItems(), func(ctr *commands.Container, _ int) bool {
+		return !containerIsComposeManaged(ctr) && ctr.Container.State == "running"
+	})
+	if len(targets) == 0 {
+		return gui.createErrorPanel(gui.Tr.NoContainersToUpdate)
+	}
+
+	prompt := gui.containersPrompt(targets, gui.Tr.ConfirmUpdateAllContainers)
+	return gui.createConfirmationPanel(gui.Tr.Confirm, gui.confirmPrompt(prompt), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus(gui.Tr.UpdatingAllContainersStatus, func() error {
 			failures := []string{}
-			for _, ctr := range gui.Panels.Containers.List.GetAllItems() {
-				// Recreating starts the new container, so leave stopped containers
-				// (finished jobs, things the user switched off) alone.
-				if containerIsComposeManaged(ctr) || ctr.Container.State != "running" {
-					continue
-				}
+			for _, ctr := range targets {
 				if err := ctr.Recreate(context.Background(), commands.RecreateOptions{PullImage: true}); err != nil {
 					gui.Log.Error(err)
 					failures = append(failures, fmt.Sprintf("%s: %s", ctr.Name, strings.TrimSpace(err.Error())))

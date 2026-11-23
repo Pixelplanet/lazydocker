@@ -10,7 +10,7 @@ if command -v gotest; then
     use_go_test=true
 fi
 
-for d in $( find ./* -maxdepth 10 ! -path "./vendor*" ! -path "./.git*" ! -path "./scripts*" -type d); do
+for d in $( find ./* -maxdepth 10 ! -path "./vendor*" ! -path "./.git*" ! -path "./scripts*" ! -path "./third_party*" -type d); do
     if ls $d/*.go &> /dev/null; then
         args="-race -coverprofile=profile.out -covermode=atomic $d"
         if [ "$use_go_test" == true ]; then
@@ -24,3 +24,7 @@ for d in $( find ./* -maxdepth 10 ! -path "./vendor*" ! -path "./.git*" ! -path 
         fi
     fi
 done
+
+# gocui is a separate Go package tree (see the replace directive in go.mod),
+# so its tests cannot use our vendor directory.
+(cd third_party/gocui && GOFLAGS=-mod=mod go test ./...)
