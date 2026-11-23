@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"sync"
 	"unicode"
@@ -63,6 +64,15 @@ type View struct {
 	// rendering new content or if the view is resized) we should set tainted to
 	// true and viewLines to nil
 	viewLines []viewLine
+
+	// lazydocker patch: the first wrappedLines entries of lines are unchanged
+	// since they were last wrapped (to wrappedWidth columns) into the first
+	// wrappedViewLines entries of viewLines, so draw only needs to wrap the
+	// lines after them. Without this every write re-wraps the whole buffer,
+	// which gets expensive when following the logs of a busy container.
+	wrappedLines     int
+	wrappedViewLines int
+	wrappedWidth     int
 
 	// writeMutex protects locks the write process
 	writeMutex sync.Mutex
@@ -180,6 +190,24 @@ type View struct {
 func (v *View) clearViewLines() {
 	v.tainted = true
 	v.viewLines = nil
+	v.wrappedLines = 0
+	v.wrappedViewLines = 0
+}
+
+// invalidateWrapFrom records that line y and the lines after it have changed
+// and need to be wrapped again on the next draw.
+func (v *View) invalidateWrapFrom(y int) {
+	if y >= v.wrappedLines {
+		return
+	}
+	if y < 0 {
+		y = 0
+	}
+
+	v.wrappedViewLines = sort.Search(v.wrappedViewLines, func(i int) bool {
+		return v.viewLines[i].linesY >= y
+	})
+	v.wrappedLines = y
 }
 
 type searcher struct {
@@ -713,6 +741,7 @@ func (v *View) WriteRunes(p []rune) {
 // writeRunes copies slice of runes into internal lines buffer.
 func (v *View) writeRunes(p []rune) {
 	v.tainted = true
+	v.invalidateWrapFrom(v.wy)
 
 	// Fill with empty cells, if writing outside current view buffer
 	v.makeWriteable(v.wx, v.wy)
@@ -906,6 +935,8 @@ func (v *View) Reset() {
 
 	v.rewind()
 	v.lines = nil
+	v.wrappedLines = 0
+	v.wrappedViewLines = 0
 }
 
 // This is for when we've done a restart for the sake of avoiding a flicker and
@@ -1009,18 +1040,24 @@ func (v *View) draw() error {
 		v.ox = 0
 	}
 	if v.tainted {
-		lineIdx := 0
 		lines := v.lines
 		if v.HasLoader {
 			lines = v.loaderLines()
 		}
-		for i, line := range lines {
-			wrap := 0
-			if v.Wrap {
-				wrap = maxX
-			}
+		wrap := 0
+		if v.Wrap {
+			wrap = maxX
+		}
 
-			ls := lineWrap(line, wrap)
+		// Start over unless the lines we wrapped last time can be reused as is.
+		if v.HasLoader || wrap != v.wrappedWidth || v.wrappedLines > len(lines) || v.wrappedViewLines > len(v.viewLines) {
+			v.wrappedLines = 0
+			v.wrappedViewLines = 0
+		}
+
+		lineIdx := v.wrappedViewLines
+		for i := v.wrappedLines; i < len(lines); i++ {
+			ls := lineWrap(lines[i], wrap)
 			for j := range ls {
 				vline := viewLine{linesX: j, linesY: i, line: ls[j]}
 
@@ -1034,6 +1071,9 @@ func (v *View) draw() error {
 		}
 		if !v.HasLoader {
 			v.tainted = false
+			v.wrappedLines = len(lines)
+			v.wrappedViewLines = lineIdx
+			v.wrappedWidth = wrap
 		}
 	}
 
@@ -1313,6 +1353,7 @@ func (v *View) SetHighlight(y int, on bool) error {
 		cells = append(cells, c)
 	}
 	v.tainted = true
+	v.invalidateWrapFrom(y)
 	v.lines[y] = cells
 	return nil
 }

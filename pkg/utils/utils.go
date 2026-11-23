@@ -160,9 +160,11 @@ func RenderTable(rows [][]string) (string, error) {
 
 // Decolorise strips a string of color
 func Decolorise(str string) string {
-	re := regexp.MustCompile(`\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mK]`)
-	return re.ReplaceAllString(str, "")
+	return colorSequenceRegexp.ReplaceAllString(str, "")
 }
+
+// compiled once: Decolorise runs for every cell of every list on every render
+var colorSequenceRegexp = regexp.MustCompile(`\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mK]`)
 
 func getPadWidths(rows [][]string) []int {
 	if len(rows[0]) <= 1 {

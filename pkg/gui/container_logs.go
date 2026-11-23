@@ -43,7 +43,9 @@ func (gui *Gui) renderContainerLogsToMainAux(container *commands.Container, ctx 
 
 	// if we are here because the task has been stopped, we should return
 	// if we are here then the container must have exited, meaning we should wait until it's back again before
-	ticker := time.NewTicker(time.Millisecond * 100)
+	// Each tick is an inspect call against the daemon for as long as a stopped
+	// container stays selected, so don't poll faster than we need to.
+	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	for {
 		select {
